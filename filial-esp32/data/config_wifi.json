@@ -1,0 +1,7 @@
+{
+  "mode": "station",
+  "ssid": "MINHA_REDE_WIFI",
+  "password": "SENHA_WIFI",
+  "ap_ssid": "ESP32-FILIAL",
+  "ap_password": "12345678"
+}
