@@ -36,6 +36,8 @@ Matriz central envia comandos **UDP unicast** para filiais, que respondem com o 
 | Polling padrão  | 15 s                  | Configurável pelo usuário na GUI                        |
 | Timeout offline | 3 ciclos sem resposta | Filial marcada offline automaticamente                  |
 
+> **Nota de desvio do enunciado original**: o enunciado original define `list_req` e `get_status` sem campos `user`/`pass`. Esta especificação corrige essa omissão por segurança — **todas** as requisições incluem credenciais de autenticação.
+
 ### 2.3 Fluxo de Comunicação
 
 #### 2.3.1 Polling automático (monitoramento)
@@ -76,6 +78,8 @@ Filial aplica alteração --> set_resp --> Matriz --> GUI (confirmação)
 - **Identificação**: conflito de IDs entre filiais resolvido por IP:porta de origem
 - **Validação**: Matriz normaliza/valida respostas antes de encaminhar à GUI
 - **Conexão**: polling só inicia após clicar **"Conectar"**; desconectado = silêncio total
+- **Credenciais**: a matriz envia a **mesma** credencial (`user`/`pass` de `config_matriz.json`) para **todas** as filiais. Se a credencial não bater com a filial, esta ignora silenciosamente
+- **GUI da Filial**: opcional
 
 ---
 
@@ -112,7 +116,7 @@ Todos os comandos incluem `user` e `pass`. Requisições inválidas são **ignor
 }
 ```
 
-> A ordem dos IDs **não é garantida** — não assuma nenhuma ordenação.
+
 
 ### 3.3 `get_status` — Estado atual
 
@@ -182,6 +186,8 @@ A filial **ignora silenciosamente** (sem resposta) quando:
 - JSON malformado ou campos obrigatórios faltando
 - `id` inexistente ou aponta para `sensor_*` em `set_req`
 - `value` fora do range esperado
+- `value` com **tipo incorreto** (ex.: string para `light`, `null`, float para `light`)
+- Campo `id` ou `value` ausente em `set_req`
 
 > **Princípio**: cada pacote é processado de forma **atômica e independente** — sem concorrência entre requisições.
 
@@ -205,10 +211,10 @@ A filial **ignora silenciosamente** (sem resposta) quando:
 
 ### 4.2 Tipos de dispositivos
 
-| Tipo         | Descrição                                |
-| ------------ | ---------------------------------------- |
-| `sensor_*`   | Dispositivo de entrada (somente leitura) |
-| `actuator_*` | Dispositivo de saída (leitura + escrita) |
+| Tipo         | Descrição                                                 |
+| ------------ | --------------------------------------------------------- |
+| `sensor_*`   | Dispositivo de entrada (somente leitura)                  |
+| `actuator_*` | Dispositivo de saída (leitura  do valor atual do atuador) |
 
 **Exemplos**: `sensor_light_sala`, `actuator_light_sala`, `sensor_ac_escritorio`, `actuator_ac_escritorio`
 
@@ -245,10 +251,6 @@ A cada ciclo, a Matriz envia `list_req` + `get_status` e conta falhas consecutiv
 - Filial offline **permanece na lista** com status offline
 - Quando responde novamente → volta a **online**
 - `offline_threshold` = `polling_interval` × 3
-
-### 6.2 Estado de carregamento
-
-Antes da primeira resposta de uma filial, a GUI exibe **carregando** para seus dispositivos.
 
 ---
 
@@ -300,6 +302,8 @@ Antes da primeira resposta de uma filial, a GUI exibe **carregando** para seus d
 | `admin_pass` | string | Senha para autenticar a matriz               |
 | `id`         | array  | Lista de IDs de sensores e atuadores         |
 
+> **Nota de correção do enunciado original**: o enunciado representa este campo como `"[sensor_actuator_vector]"`, o que pode ser interpretado como uma string. Nesta especificação, `id` é definido como um **array JSON** — a notação entre colchetes denota a lista de strings.
+
 ### 8.2 `config_matriz.json` (na matriz)
 
 ```json
@@ -314,16 +318,20 @@ Antes da primeira resposta de uma filial, a GUI exibe **carregando** para seus d
 }
 ```
 
-| Campo              | Tipo   | Descrição                                 |
-| ------------------ | ------ | ----------------------------------------- |
-| `user`             | string | Credencial para autenticar com as filiais |
-| `pass`             | string | Senha para autenticar com as filiais      |
-| `polling_interval` | int    | Segundos entre cada polling (padrão: 15)  |
-| `filiais`          | array  | Lista com `name`, `ip`, `port`            |
+| Campo              | Tipo   | Descrição                                           |
+| ------------------ | ------ | --------------------------------------------------- |
+| `user`             | string | Credencial para autenticar com **todas** as filiais |
+| `pass`             | string | Senha para autenticar com **todas** as filiais      |
+| `polling_interval` | int    | Segundos entre cada polling (padrão: 15)            |
+| `filiais`          | array  | Lista com `name`, `ip`, `port`                      |
+
+> **Nota**: a matriz usa uma única credencial global (`user`/`pass`) para autenticar com todas as filiais. Cada filial valida essa credencial contra seu próprio `admin_user`/`admin_pass`. Se não bater, a filial ignora silenciosamente.
 
 ---
 
-## 9. Arquitetura Visual
+## 9 Arquitetura Visual
+
+### 9.1 Relação entre Matriz e Filiais
 
 ```mermaid
 flowchart TD
@@ -334,7 +342,7 @@ flowchart TD
     C -->|10.0.0.3:5100 | F[Filial C]
 ```
 
-## 9.1 Diagrama de Sequência
+### 9.2 Diagrama de Sequência
 
 ```mermaid
 sequenceDiagram
