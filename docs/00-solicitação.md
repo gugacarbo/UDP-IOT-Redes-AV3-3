@@ -77,8 +77,8 @@ No contexto desta aplicação haverão as seguintes combinações de tipo/dispos
 
 - sensor_light – obtém o estado atual do interruptor de luz (boolean);
 - actuator_light – altera o estado do interrupto de luz (boolean);
-- sensor_ac – obtém o estado atual do motor do ar condicionado (analógico 0-1023);
-- actuator_ac – altera o estado atual do motor do ar condicionado (analógico 0-1023);
+- sensor_ac – obtém o estado atual do motor do ar condicionado (analógico 0-100);
+- actuator_ac – altera o estado atual do motor do ar condicionado (analógico 0-100);
 
 ## Alteração de Estado
 
