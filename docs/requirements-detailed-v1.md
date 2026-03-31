@@ -1,111 +1,100 @@
-# Requisitos Detalhados - UDP IoT Sistema de Monitoramento - v1
+# Requisitos Detalhados — UDP Sistema de Monitoramento
 
-## 1. Visão Geral do Sistema
-
-### 1.1 Descrição
-
-Sistema IoT para monitoramento e controle remoto de dispositivos (luzes e ar-condicionado) em filiais, gerenciado a partir de uma matriz central. O sistema permite que um operador na matriz visualize o estado dos dispositivos em todas as filiais e altere o estado dos atuadores remotamente.
-
-### 1.2 Problema do Cliente
-
-> "Temos diversas filiais e estamos tendo um gasto excessivo de energia elétrica por conta de luzes e aparelhos de ar-condicionado que se mantêm ligados em horários nos quais não há nenhum funcionário na empresa. Gostaria de uma solução que nos permitisse monitorá-los, desligá-los e ligá-los tudo remotamente."
-
-### 1.3 Arquitetura do Sistema
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         MATRIZ (HQ)                         │
-│                                                             │
-│    ┌───────────────────────────────────────────────────┐    │
-│    │  Navegador/App (GUI)                              │    │
-│    └─────────────────────┬─────────────────────────────┘    │
-│                          │ WebSocket                        │
-│    ┌─────────────────────▼─────────────────────────────┐    │
-│    │  Servidor WebSocket (porta 80)                    │    │
-│    │  - Recebe comandos do browser                     │    │
-│    │  - Envia respostas ao browser                     │    │
-│    └─────────────────────┬─────────────────────────────┘    │
-│                          │                                  │
-│    ┌─────────────────────▼─────────────────────────────┐    │
-│    │  Cliente UDP (envia comandos)                     │    │
-│    │  Servidor UDP (recebe respostas) - porta 51000    │    │
-│    └───────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                    UDP Broadcast (comandos)
-                    UDP Unicast (respostas)
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│  FILIAL 1                              FILIAL 2             │
-│  ┌─────────────────────────────────┐  ┌─────────────────┐   │
-│  │ Servidor UDP (porta 51000)      │  │ Servidor UDP    │   │
-│  │ - Recebe comandos               │  │ (porta 51000)   │   │
-│  │ - Envia respostas               │  │ - Recebe cmds   │   │
-│  └───────────────┬─────────────────┘  │ - Envia resp    │   │
-│                  │                    └────────┬────────┘   │
-│  ┌───────────────▼─────────────────┐           │            │
-│  │ Device Manager                  │           │            │
-│  │ - Sensores (leitura)            │           │            │
-│  │ - Atuadores (escrita)           │           │            │
-│  └─────────────────────────────────┘           │            │
-└────────────────────────────────────────────────┴────────────┘
-```
+> Sistema IoT onde uma **Matriz** monitora e controla luzes e ar-condicionado de múltiplas **Filiais** via UDP unicast. A GUI web permite visualizar estado, ligar/desligar dispositivos e gerenciar filiais.
 
 ---
 
-## 2. Entidades do Sistema
+## 1. Visão Geral
 
-| Entidade   | Componente         | Papel    | Função                                     |
-| ---------- | ------------------ | -------- | ------------------------------------------ |
-| **Matriz** | Cliente UDP        | CLIENTE  | Envia comandos para filial (broadcast)     |
-| **Matriz** | Servidor UDP       | SERVIDOR | Recebe respostas das filiais (porta 51000) |
-| **Matriz** | Servidor WebSocket | SERVIDOR | Interface com usuário (porta 80)           |
-| **Filial** | Servidor UDP       | SERVIDOR | Recebe comandos da matriz, envia respostas |
-| **Filial** | Device Manager     | -        | Controla sensores e atuadores locais       |
+### 1.1 Problema
 
-### 2.1 Fluxo de Comunicação
+> "Temos diversas filiais com gasto excessivo de energia por luzes e ares-condicionados que ficam ligados fora do horário de trabalho. Queremos monitorar e controlar tudo remotamente."
 
-1. Usuário interage com GUI no navegador
-2. GUI envia comando via WebSocket para servidor WebSocket na Matriz
-3. Matriz (Cliente UDP) envia comando para filial via broadcast UDP
-4. Filial processa comando e envia resposta via unicast UDP
-5. Matriz (Servidor UDP) recebe resposta
-6. Matriz (Servidor WebSocket) transmite resposta para GUI
-7. GUI atualiza interface para usuário
+### 1.2 Solução
+
+Matriz central envia comandos **UDP unicast** para filiais, que respondem com o estado dos dispositivos. Uma **GUI** que permite ao operador visualizar e controlar tudo em tempo real.
 
 ---
 
-## 3. Protocolo de Comunicação
+## 2. Arquitetura
 
-### 3.1 Visão Geral
+### 2.1 Entidades
 
-- **Transporte**: UDP
-- **Formato**: JSON (UTF-8)
-- **Payload**: JSON puro, sem delimitadores ou cabeçalhos adicionais
-- **Autenticação**: Todas as requests devem incluir `user` e `pass`
-- **Fluxo**: Best-effort (servidor ignora requisições com autenticação inválida)
+| Entidade   | Papel    | Responsabilidade                     |
+| ---------- | -------- | ------------------------------------ |
+| **Matriz** | Cliente  | Gerencia e controla todas as filiais |
+| **Filial** | Servidor | Expõe sensores e atuadores via UDP   |
 
-### 3.2 Comandos (Cliente Matriz → Servidor Filial)
+### 2.2 Protocolo
 
-Todas as requisições devem incluir campos de autenticação:
+| Parâmetro       | Valor                 | Notas                                                   |
+| --------------- | --------------------- | ------------------------------------------------------- |
+| Transporte      | UDP (unicast)         | Sem retransmissão — o próximo polling recupera o estado |
+| Formato         | JSON (UTF-8)          | Toda comunicação                                        |
+| Autenticação    | `user` + `pass`       | Em **toda** requisição; texto puro (rede local)         |
+| Porta padrão    | 51000                 | Porta UDP da filial                                     |
+| Polling padrão  | 15 s                  | Configurável pelo usuário na GUI                        |
+| Timeout offline | 3 ciclos sem resposta | Filial marcada offline automaticamente                  |
 
-```json
-{
-  "cmd": "<comando>",
-  "user": "<usuario>",
-  "pass": "<senha>"
-}
+### 2.3 Fluxo de Comunicação
+
+#### 2.3.1 Polling automático (monitoramento)
+
+Clicando em **"Conectar"**, a Matriz inicia o ciclo:
+
+```
+Matriz --[list_req + get_status]--> Filial A (unicast)
+Matriz --[list_req + get_status]--> Filial B (unicast)
+Filiais --> Matriz (respostas unicast)
+Matriz --> GUI (atualização em tempo real)
 ```
 
-| Comando      | Descrição                                     | Campos adicionais |
-| ------------ | --------------------------------------------- | ----------------- |
-| `list_req`   | Lista todos os dispositivos                   | -                 |
-| `get_status` | Obtém valores atuais de todos os dispositivos | -                 |
-| `set_req`    | Altera valor de um dispositivo                | `id`, `value`     |
+- O ciclo se repete continuamente conforme `polling_interval`
+- **"Desconectar"** para o polling — nenhuma requisição é enviada fora desse ciclo
 
-#### 3.2.1 list_req - Listar Dispositivos
+#### 2.3.2 Controle manual (atuadores)
+
+```
+Usuário clica na GUI --> set_req --> Matriz --> Filial (UDP)
+Filial aplica alteração --> set_resp --> Matriz --> GUI (confirmação)
+```
+
+> Após `set_req`, o estado é atualizado apenas após a resposta da filial (consistência).
+
+#### 2.3.3 Configuração de filiais e polling
+
+1. Matriz carrega `config_matriz.json` (lista de filiais + `polling_interval`)
+2. GUI exibe e permite **adicionar / editar / remover** filiais
+3. Campo **"Intervalo de Polling"** (segundos) — alteração aplicada imediatamente, sem reconectar
+4. Todas as alterações são salvas em `config_matriz.json`
+
+### 2.4 Notas Arquiteturais
+
+- **Autenticação**: credenciais `user`/`pass` em **cada requisição** JSON, texto puro (aceitável em rede local)
+- **Erros**: requisições inválidas são **ignoradas silenciosamente** pela filial — sem resposta, sem erro
+- **Unicast**: Matriz → Filial individualmente via IP:porta do `config_matriz.json`
+- **Identificação**: conflito de IDs entre filiais resolvido por IP:porta de origem
+- **Validação**: Matriz normaliza/valida respostas antes de encaminhar à GUI
+- **Conexão**: polling só inicia após clicar **"Conectar"**; desconectado = silêncio total
+
+---
+
+## 3. Comandos
+
+### 3.1 Comandos disponíveis
+
+Todos os comandos incluem `user` e `pass`. Requisições inválidas são **ignoradas silenciosamente** pela filial (sem resposta, sem erro).
+
+| Comando      | Descrição                     | Campos extras  |
+| ------------ | ----------------------------- | -------------- |
+| `list_req`   | Lista todos os dispositivos   | —              |
+| `get_status` | Estado atual dos dispositivos | —              |
+| `set_req`    | Altera valor de um device     | `id` + `value` |
+
+### 3.2 `list_req` — Listar dispositivos
 
 **Requisição:**
+
 ```json
 {
   "cmd": "list_req",
@@ -115,19 +104,20 @@ Todas as requisições devem incluir campos de autenticação:
 ```
 
 **Resposta:**
+
 ```json
 {
   "cmd": "list_resp",
-  "filial_id": "Filial Centro",
-  "id": ["actuator_light_sala", "sensor_light_sala", "actuator_ac_escritorio", "sensor_ac_escritorio"]
+  "id": ["actuator_light_sala", "sensor_light_sala", "actuator_ac_escritorio"]
 }
 ```
 
-> **Identificação**: A filial pode incluir `filial_id` opcionalmente. A matriz identifica a filial pelo IP:porta de origem UDP se o campo não estiver presente.
+> A ordem dos IDs **não é garantida** — não assuma nenhuma ordenação.
 
-#### 3.2.2 get_status - Obter Estado Atual
+### 3.3 `get_status` — Estado atual
 
 **Requisição:**
+
 ```json
 {
   "cmd": "get_status",
@@ -137,411 +127,230 @@ Todas as requisições devem incluir campos de autenticação:
 ```
 
 **Resposta:**
+
 ```json
 {
   "cmd": "get_resp",
-  "filial_id": "Filial Centro",
   "actuator_light_sala": true,
   "sensor_light_sala": false,
-  "actuator_ac_escritorio": true,
-  "sensor_ac_escritorio": false
+  "actuator_ac_escritorio": 720
 }
 ```
 
-#### 3.2.3 set_req - Alterar Estado
+### 3.4 `set_req` — Alterar estado
 
-**Requisição:**
+**Luz (boolean):**
+
 ```json
 {
   "cmd": "set_req",
-  "id": "actuator_light_sala",
-  "value": true,
   "user": "admin",
-  "pass": "admin"
-}
-```
-
-**Resposta:**
-```json
-{
-  "cmd": "set_resp",
-  "filial_id": "Filial Centro",
+  "pass": "admin",
   "id": "actuator_light_sala",
   "value": true
 }
 ```
 
-> **Nota**: Se `set_req` for enviado para um dispositivo do tipo `sensor_*`, a filial ignora a requisição.
-
-### 3.3 Tipos de Dispositivos
-
-| Tipo         | Descrição           | Acesso          |
-| ------------ | ------------------- | --------------- |
-| `sensor_*`   | Sensores (leitura)  | Somente leitura |
-| `actuator_*` | Atuadores (escrita) | Somente escrita |
-
-> **Nota**: Tentativas de `set_req` em dispositivos do tipo `sensor_*` devem ser ignoradas pela filial.
-
-#### 3.3.1 Dispositivos de Luz
-
-| ID                       | Tipo    | Descrição                    | Valor   | Pino GPIO |
-| ------------------------ | ------- | ---------------------------- | ------- | --------- |
-| `sensor_light_<local>`   | Sensor  | Estado do interruptor de luz | boolean | especificado na config |
-| `actuator_light_<local>` | Atuador | Controla interruptor de luz  | boolean | especificado na config |
-
-#### 3.3.2 Dispositivos de Ar Condicionado
-
-| ID                    | Tipo    | Descrição                          | Valor   | Pino GPIO |
-| --------------------- | ------- | ---------------------------------- | ------- | --------- |
-| `sensor_ac_<local>`   | Sensor  | Estado do motor do ar condicionado | boolean | especificado na config |
-| `actuator_ac_<local>` | Atuador | Controla motor do ar condicionado  | boolean | especificado na config |
-
-### 3.4 Formato do ID de Dispositivo
-
-O formato dos IDs segue o padrão: `<type>_<device>_<place>`
-
-| Campo      | Valores              | Descrição                                         |
-| ---------- | -------------------- | ------------------------------------------------- |
-| `<type>`   | `sensor`, `actuator` | Tipo do dispositivo                               |
-| `<device>` | `light`, `ac`        | Tipo de equipamento                               |
-| `<place>`  | string livre         | Localização (ex: `sala`, `escritorio`, `reuniao`) |
-
-**Exemplos:**
-- `actuator_light_sala` - Atuador de luz da sala
-- `sensor_ac_escritorio` - Sensor de ar condicionado do escritório
-- `actuator_light_reuniao` - Atuador de luz da sala de reunião
-
-### 3.5 Identificação da Filial
-
-A filial é identificada pelo IP:porta de origem UDP da resposta. Opcionalmente, pode incluir o campo `filial_id` nas respostas se configurado.
-
-Em caso de conflito de IDs de dispositivos entre filiais (ex: duas filiais com `actuator_light_sala`), a matriz usa o IP:porta para distinguir.
-
----
-
-## 4. Requisitos Técnicos
-
-### 4.1 Hardware
-
-- **Placa**: ESP32 (esp32doit-devkit-v1)
-- **Armazenamento**: LittleFS (não SPIFFS)
-- **Comunicação**: WiFi (Station + Access Point)
-
-### 4.2 Software - Matriz
-
-| Componente     | Descrição                                  |
-| -------------- | ------------------------------------------ |
-| Cliente UDP    | Envia comandos para filial (broadcast)     |
-| Servidor UDP   | Recebe respostas das filiais (porta 51000) |
-| AsyncWebServer | Serve interface web (porta 80)             |
-| AsyncWebSocket | Comunicação bidirecional com browser       |
-| LittleFS       | Armazena arquivos da GUI e configurações   |
-
-### 4.3 Software - Filial
-
-| Componente     | Descrição                                  |
-| -------------- | ------------------------------------------ |
-| Servidor UDP   | Recebe comandos da matriz (porta 51000)    |
-| Device Manager | Gerencia sensores e atuadores              |
-| LittleFS       | Armazena configuração (config_filial.json) |
-
-### 4.4 Interface Web (GUI)
-
-- **Framework**: React 19 + Vite
-- **UI Library**: shadcn/ui
-- **Tema**: Dark-mode (com opção de alternar)
-- **Build**: Automático via Makefile
-- **Entrega**: Arquivos servidos pelo AsyncWebServer do ESP32
-- **Armazenamento**: LittleFS
-
-### 4.5 Bibliotecas
-
-#### Matriz (platformio.ini)
-```ini
-lib_deps =
-    me-no-dev/ESP Async WebServer@^1.2
-    me-no-dev/AsyncTCP@^1.1
-    bblanchon/ArduinoJson@^6.21
-```
-
-#### Filial (platformio.ini)
-```ini
-lib_deps =
-    bblanchon/ArduinoJson@^6.21
-```
-
----
-
-## 5. Configuração
-
-### 5.1 Configuração da Filial (config_filial.json)
-
-Arquivo armazenado no LittleFS da filial.
+**Ar-condicionado (analógico 0–1023):**
 
 ```json
 {
-  "name": "Filial Centro",
-  "filial_id": "filial_centro",
+  "cmd": "set_req",
+  "user": "admin",
+  "pass": "admin",
+  "id": "actuator_ac_escritorio",
+  "value": 500
+}
+```
+
+**Resposta:**
+
+```json
+{
+  "cmd": "set_resp",
+  "id": "actuator_light_sala",
+  "value": true
+}
+```
+
+### 3.5 Tratamento de erros pela filial
+
+A filial **ignora silenciosamente** (sem resposta) quando:
+
+- `user` / `pass` inválidos
+- `cmd` desconhecido
+- JSON malformado ou campos obrigatórios faltando
+- `id` inexistente ou aponta para `sensor_*` em `set_req`
+- `value` fora do range esperado
+
+> **Princípio**: cada pacote é processado de forma **atômica e independente** — sem concorrência entre requisições.
+
+---
+
+## 4. Dispositivos
+
+### 4.1 Formato do ID
+
+```
+<type>_<dispositivo>_<local>
+```
+
+| Parte           | Valores               | Exemplo              |
+| --------------- | --------------------- | -------------------- |
+| `<type>`        | `sensor` / `actuator` | `actuator`           |
+| `<dispositivo>` | `light` / `ac`        | `light`              |
+| `<local>`       | string livre          | `sala`, `escritorio` |
+
+**Exemplos**: `actuator_light_sala`, `sensor_ac_escritorio`, `actuator_light_reuniao`
+
+### 4.2 Tipos de dispositivos
+
+| Tipo         | Descrição                                |
+| ------------ | ---------------------------------------- |
+| `sensor_*`   | Dispositivo de entrada (somente leitura) |
+| `actuator_*` | Dispositivo de saída (leitura + escrita) |
+
+**Exemplos**: `sensor_light_sala`, `actuator_light_sala`, `sensor_ac_escritorio`, `actuator_ac_escritorio`
+
+### 4.3 Restrições de acesso e valores
+
+| Tipo         | Acesso            | `light` | `ac`   |
+| ------------ | ----------------- | ------- | ------ |
+| `sensor_*`   | Somente leitura   | bool    | 0–1023 |
+| `actuator_*` | Leitura + escrita | bool    | 0–1023 |
+
+> Tentativa de `set_req` em `sensor_*` → silenciosamente ignorada.
+
+---
+
+## 5. Identificação de Filiais
+
+Cada filial é identificada por **IP:porta** de origem UDP. Isso permite IDs duplicados entre filiais sem conflito — a Matriz distingue pelo endereço de origem.
+
+---
+
+## 6. Comportamento de Conexão
+
+### 6.1 Ciclo de polling e timeout
+
+A cada ciclo, a Matriz envia `list_req` + `get_status` e conta falhas consecutivas:
+
+| Ciclos sem resposta | Estado da filial |
+| ------------------- | ---------------- |
+| 0                   | **Online**       |
+| 1                   | Online           |
+| 2                   | Online           |
+| 3                   | **Offline**      |
+
+- Filial offline **permanece na lista** com status offline
+- Quando responde novamente → volta a **online**
+- `offline_threshold` = `polling_interval` × 3
+
+### 6.2 Estado de carregamento
+
+Antes da primeira resposta de uma filial, a GUI exibe **carregando** para seus dispositivos.
+
+---
+
+## 7. Requisitos Funcionais
+
+### 7.1 Monitoramento
+
+- Lista de filiais com status **online / offline / carregando**
+- Estado em tempo real de todos os dispositivos por filial
+- Polling automático com intervalo **configurável** (padrão: 15 s)
+- Atualização contínua enquanto conectado
+
+### 7.2 Controle
+
+- Alterar estado de atuadores (luz liga/desliga, AC intensidade 0–1023)
+- Feedback visual imediato após confirmação da filial
+
+### 7.3 Configuração
+
+- Gerenciar filiais: **adicionar / editar / remover** (nome, IP, porta)
+- Alterar intervalo de polling (aplicado imediatamente)
+- **Conectar / Desconectar** polling
+- Tudo salvo em `config_matriz.json`
+
+---
+
+## 8. Arquivos de Configuração
+
+### 8.1 `config_filial.json` (em cada filial)
+
+```json
+{
   "port": 51000,
-  "admin_user": "admin",
-  "admin_pass": "admin",
-  "devices": [
-    {"id": "actuator_light_sala", "pin": 2},
-    {"id": "sensor_light_sala", "pin": 4},
-    {"id": "actuator_ac_escritorio", "pin": 5},
-    {"id": "sensor_ac_escritorio", "pin": 18}
+  "admin_user": "test",
+  "admin_pass": "test",
+  "id": [
+    "actuator_light_sala",
+    "sensor_light_sala",
+    "actuator_ac_escritorio",
+    "sensor_ac_escritorio"
   ]
 }
 ```
 
-| Campo        | Tipo   | Descrição                                      |
-| ------------ | ------ | --------------------------------------------- |
-| `name`       | string | Nome da filial para exibição na GUI           |
-| `filial_id`  | string | Identificador opcional nas respostas           |
-| `port`       | int    | Porta UDP do servidor                          |
-| `admin_user` | string | Usuário para autenticação                      |
-| `admin_pass` | string | Senha para autenticação                        |
-| `devices`    | array  | Lista de objetos com `id` e `pin` dos dispositivos |
+| Campo        | Tipo   | Descrição                                    |
+| ------------ | ------ | -------------------------------------------- |
+| `port`       | int    | Porta UDP que a filial escuta (padrão 51000) |
+| `admin_user` | string | Usuário para autenticar a matriz             |
+| `admin_pass` | string | Senha para autenticar a matriz               |
+| `id`         | array  | Lista de IDs de sensores e atuadores         |
 
-#### Formato de Device
-
-Cada device na lista deve ter:
-
-| Campo | Tipo   | Descrição                    |
-| ----- | ------ | ---------------------------- |
-| `id`  | string | ID do dispositivo            |
-| `pin` | int    | Número do pino GPIO (0-39)  |
-
-### 5.2 Configuração WiFi (config_wifi.json)
-
-Arquivo armazenado no LittleFS.
+### 8.2 `config_matriz.json` (na matriz)
 
 ```json
 {
-  "mode": "station",
-  "ssid": "minha_rede",
-  "password": "minha_senha",
-  "ap_ssid": "ESP32-MATRIZ",
-  "ap_password": "12345678"
+  "user": "admin",
+  "pass": "admin",
+  "polling_interval": 15,
+  "filiais": [
+    { "name": "Filial Centro", "ip": "192.168.1.100", "port": 51000 },
+    { "name": "Filial Norte",  "ip": "192.168.1.101", "port": 51000 }
+  ]
 }
 ```
 
-| Campo         | Tipo   | Descrição                         |
-| ------------- | ------ | --------------------------------- |
-| `mode`        | string | `station`, `ap` ou `both`         |
-| `ssid`        | string | Nome da rede WiFi (Station mode)  |
-| `password`    | string | Senha da rede WiFi (Station mode) |
-| `ap_ssid`     | string | Nome do Access Point              |
-| `ap_password` | string | Senha do Access Point             |
-
-### 5.3 Acesso e Identificação
-
-- **mDNS**: `esp32-matriz.local` / `esp32-filial.local`
-- **Serial**: IP exibido no monitor serial na inicialização
-- **GUI**: Nome da filial + IP:porta como tooltip
+| Campo              | Tipo   | Descrição                                 |
+| ------------------ | ------ | ----------------------------------------- |
+| `user`             | string | Credencial para autenticar com as filiais |
+| `pass`             | string | Senha para autenticar com as filiais      |
+| `polling_interval` | int    | Segundos entre cada polling (padrão: 15)  |
+| `filiais`          | array  | Lista com `name`, `ip`, `port`            |
 
 ---
 
-## 6. Interface Web (GUI)
+## 9. Arquitetura Visual
 
-### 6.1 Funcionalidades
-
-A interface web deve permitir:
-
-1. **Visualização de filiais**
-   - Lista de filiais conectadas/descobertas
-   - Status de conexão (online/offline)
-   - Nome da filial + IP:porta
-
-2. **Monitoramento**
-   - Estado atual de todos os dispositivos por filial
-   - Atualização em tempo real via WebSocket
-   - Polling automático (configurável, padrão 5 segundos)
-
-3. **Controle**
-   - Alterar estado de atuadores
-   - Feedback visual imediato
-
-4. **Configuração**
-   - Endereço IP e porta do servidor de cada filial (se manual)
-   - Período de polling configurável
-
-### 6.2 Comportamento de Conexão
-
-| Situação            | Comportamento                               |
-| ------------------- | ------------------------------------------- |
-| Filial não responde | Mostra "sem resposta", mantém últimos dados |
-| Retry               | Automático, a cada 5 segundos               |
-| Filial offline      | Mantém na lista com status offline          |
-| Reconexão           | Tenta automaticamente indefinidamente       |
-
----
-
-## 7. Build e Deploy
-
-### 7.1 Estrutura de Diretórios
-
-```
-UDP-IOT-Redes-AV3-3/
-├── Makefile                    # Orquestra build e upload
-├── matriz-esp32/
-│   ├── platformio.ini
-│   ├── data/                   # Arquivos para LittleFS
-│   └── src/
-├── filial-esp32/
-│   ├── platformio.ini
-│   ├── data/                   # Arquivos para LittleFS
-│   └── src/
-└── gui/                       # Projeto React
-    ├── src/
-    ├── dist/                   # Output do build
-    ├── package.json
-    └── vite.config.js
+```mermaid
+flowchart TD
+    A[Interface/GUI] --> B[Matriz]
+    B -->C[Módulo UDP unicast]
+    C -->|10.0.0.1:5100 | D[Filial A]
+    C -->|10.0.0.2:5100 | E[Filial B]
+    C -->|10.0.0.3:5100 | F[Filial C]
 ```
 
-### 7.2 Makefile
+## 9.1 Diagrama de Sequência
 
-```makefile
-# Variáveis
-ESPTOOL := python3 ~/.platformio/packages/tool-esptoolpy/esptool.py
-UPLOAD_PORT := /dev/ttyUSB0
+```mermaid
+sequenceDiagram
+    Matriz->>+Filial(n): list_req
+    Matriz->>+Filial(n): get_status
+    Filial(n)-->>Matriz: list_resp
+    Filial(n)-->>Matriz: get_resp
 
-# Targets
-.PHONY: all gui build uploadfs upload matriz filial clean
-
-all: gui build uploadfs
-
-gui:
-	cd gui && npm install && npm run build
-
-build:
-	cp -r gui/dist/* matriz-esp32/data/
-	cp -r gui/dist/* filial-esp32/data/
-
-uploadfs-matriz:
-	cd matriz-esp32 && pio run --target buildfs && \
-		pio run --target uploadfs --upload-port $(UPLOAD_PORT)
-
-uploadfs-filial:
-	cd filial-esp32 && pio run --target buildfs && \
-		pio run --target uploadfs --upload-port $(UPLOAD_PORT)
-
-uploadfs: uploadfs-matriz uploadfs-filial
-
-upload-matriz:
-	cd matriz-esp32 && pio run --target upload --upload-port $(UPLOAD_PORT)
-
-upload-filial:
-	cd filial-esp32 && pio run --target upload --upload-port $(UPLOAD_PORT)
-
-upload: upload-matriz upload-filial
-
-matriz: gui build uploadfs-matriz upload-matriz
-
-filial: gui build uploadfs-filial upload-filial
-
-clean:
-	cd gui && rm -rf dist
-	cd matriz-esp32 && pio run --target clean
-	cd filial-esp32 && pio run --target clean
 ```
 
-### 7.3 Comandos de Build
-
-| Comando         | Descrição                                                         |
-| --------------- | ----------------------------------------------------------------- |
-| `make all`      | Build GUI + upload filesystem + upload firmware (matriz e filial) |
-| `make matriz`   | Build GUI + upload filesystem + upload firmware (matriz)          |
-| `make filial`   | Build GUI + upload filesystem + upload firmware (filial)          |
-| `make gui`      | Apenas build da interface React                                   |
-| `make uploadfs` | Upload filesystem para ESP32                                      |
-| `make upload`   | Upload firmware para ESP32                                        |
-| `make clean`    | Limpa builds                                                      |
-
-### 7.4 Fluxo de Deploy
-
-1. `make matriz` executa:
-   - `npm install && npm run build` na pasta `gui/`
-   - Copia `gui/dist/*` para `matriz-esp32/data/`
-   - `pio run --target buildfs` (prepara LittleFS)
-   - `pio run --target uploadfs` (envia para ESP32)
-   - `pio run --target upload` (envia firmware)
 
 ---
 
-## 8. Decisões de Design
+## 10. Ambiente de Teste
 
-| #   | Decisão              | Valor                  | Descrição                                   |
-| --- | -------------------- | ---------------------- | ------------------------------------------ |
-| 1   | Polling              | 5 segundos             | Intervalo de polling configurável          |
-| 2   | Timeout resposta     | "Sem resposta"         | Mostra na GUI quando filial não responde   |
-| 3   | Retry                | Automático             | Cliente reenvia automaticamente             |
-| 4   | Retry intervalo      | 5 segundos             | Mesmo intervalo do polling                  |
-| 5   | Max retries          | Ilimitado              | Tenta indefinidamente                        |
-| 6   | Identificação filial| IP:porta ou filial_id | Identifica por IP ou campo opcional         |
-| 7   | Conflito IDs         | IP:porta para discernir| Distingue dispositivos com mesmo ID         |
-| 8   | Payload              | JSON puro              | Sem delimitadores ou cabeçalhos             |
-| 9   | Comunicação          | Broadcast              | UDP broadcast para comandos                 |
-| 10  | Múltiplas filiais    | Simultâneas            | Cliente gerencia todas simultaneamente      |
-| 11  | Atualização GUI     | WebSocket push         | Servidor empurra para cliente               |
-| 12  | Estados              | Boolean                | Todos os valores são true/false             |
-| 13  | Persistência         | LittleFS               | Matriz e Filial salvam configurações        |
-| 14  | WiFi                 | Station + AP           | Ambos modos configuráveis                   |
-| 15  | IP acesso            | Serial + mDNS          | Exibido no serial ou via nome.local         |
-| 16  | Autenticação matriz  | Não validar            | Filial responde a qualquer broadcast        |
-| 17  | set_req em sensor   | Ignorar                | Filial ignora comandos para sensores        |
-| 18  | GUI UI               | shadcn/ui              | Biblioteca de componentes                     |
-| 19  | GUI tema             | Dark-mode + toggle     | Suporte a tema escuro com alternância       |
-| 20  | Pino GPIO            | Na config              | Cada device especifica seu pino            |
-
----
-
-## 9. Ambientes de Teste
-
-Para ambiente de teste, deve-se assumir:
-
-- **Mínimo 2 filiais** executando o software servidor
-- **1 matriz** executando o software cliente
-- Cada filial com configuração própria em `config_filial.json`
-- Matriz conecta em todas as filiais simultaneamente
-
----
-
-## 10. Debug e Logging
-
-### 10.1 Saída Serial
-
-- **Baud rate**: 115200
-- **Informações logging**:
-  - Conexão WiFi (SSID, IP obtido)
-  - Recebimento/envio de comandos UDP
-  - Erros de parsing JSON
-  - Estado dos dispositivos
-
----
-
-## 11. Glossário
-
-| Termo            | Descrição                                          |
-| ---------------- | -------------------------------------------------- |
-| **Matriz**       | Sistema central (HQ) que gerencia todas as filiais |
-| **Filial**       | Sistema remoto em cada unidade da empresa          |
-| **Cliente UDP**  | Componente que envia comandos                      |
-| **Servidor UDP** | Componente que recebe comandos                     |
-| **Sensor**       | Dispositivo de leitura (boolean ou analógico 0-1023) |
-| **Atuador**      | Dispositivo de controle (boolean)                  |
-| **LittleFS**     | Sistema de arquivos para ESP32                     |
-| **Broadcast**    | Envio para todos os dispositivos na rede           |
-| **Unicast**      | Envio para um dispositivo específico               |
-| **Polling**      | Requisição periódica automática                    |
-| **WebSocket**    | Comunicação bidirecional em tempo real             |
-
----
-
-## 11. Histórico de Versões
-
-| Versão | Data       | Descrição                                                                      |
-| ------ | ---------- | ------------------------------------------------------------------------------ |
-| v1     | 2026-03-29 | Versão inicial com requisitos detalhados                                      |
-| v2     | 2026-03-29 | Adicionado: campo filial_id opcional, formato devices com pino GPIO, shadcn/ui + dark-mode, decisões sobre autenticação e sensores |
-| v3     | 2026-03-29 | Adicionado: tipo de sensor analógico, seção de debug via serial, decisões sobre limite dispositivos, retry, modo AP |
+- Mínimo **2 filiais** executando o firmware
+- **1 matriz** executando software + GUI
+- Cada filial com `config_filial.json` próprio
+- Matriz conecta em todas simultaneamente
