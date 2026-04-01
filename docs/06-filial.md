@@ -77,7 +77,7 @@ struct DeviceConfig {
 ### 2.3 Fallback de configuração
 
 Quando `config_filial.json` não existir ou estiver inválido:
-1. `port=51000`, `admin_user="admin"`, `admin_pass="admin"`
+1. `port=51000`, `admin_user="admin"`, `admin_pass="1234"`
 2. `devices` como array vazio
 3. Expor API REST para provisioning
 4. Persistir após primeiro `PUT /api/config` válido
@@ -105,8 +105,8 @@ Quando `config_wifi.json` não existir ou estiver inválido:
 
 | Task        | Prioridade | Stack | Função                         |
 | ----------- | ---------- | ----- | ------------------------------ |
-| UDP Server  | Alta       | 4096  | Recebe e processa comandos UDP |
-| HTTP Server | Média      | 4096  | Serve portal local e REST API  |
+| UDP Server  | Alta (2)   | 4096  | Recebe e processa comandos UDP |
+| HTTP Server | Média (1)  | 4096  | Serve REST API na porta 80     |
 
 ## 4. Protocolo UDP
 
@@ -404,7 +404,7 @@ Persiste `config_wifi.json` e reinicia. Erros → `400`.
 - `400` — `mode` diferente de `"station"`
 
 #### `GET /api/config`
-Retorna `config_filial.json` efetivo (sem expor `admin_pass`, retornando valor mascarado).
+Retorna `config_filial.json` efetivo (incluindo `admin_pass`).
 
 #### `PUT /api/config`
 Aplica imediatamente: `port` reinicia UDP server; mudanças em `devices` recriam DeviceManager; `admin_user`/`admin_pass` aplicam na próxima validação UDP.

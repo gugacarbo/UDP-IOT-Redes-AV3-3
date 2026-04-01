@@ -15,13 +15,26 @@ broadcast de estado e confirmação de comandos.
 - Controle e monitoramento em tempo real via WebSocket
 - Descoberta mDNS e fallback manual de IP
 - Consumo da API REST para configuração e manutenção
+- Gerenciamento de credenciais e intervalo de polling
+- Histórico de comandos enviados
 
 ## 2. Arquitetura da interface
 
-- Frontend em React + Vite
-- Estado global para filiais, seleção e feedback de comando
-- Atualizações em tempo real vindas do WebSocket da Matriz
-- Consumo das rotas REST para CRUD de configuração e filiais
+- **Framework:** React 19 + Vite + TypeScript
+- **Estilização:** TailwindCSS + shadcn/ui + lucide-react
+- **Estrutura de componentes:**
+  ```
+  matriz-gui/src/
+  ├── components/     # Componentes reutilizáveis
+  ├── contexts/       # React contexts (estado global)
+  ├── hooks/          # Custom hooks
+  ├── lib/            # Utilitários e helpers
+  └── types/          # Definições TypeScript
+  ```
+- **Estado global** para filiais, seleção, histórico de comandos e feedback
+- **Atualizações em tempo real** vindas do WebSocket da Matriz
+- **Consumo das rotas REST** para CRUD de configuração e filiais
+- **Tela única** com seções: Dashboard, Gerenciamento de Filiais, Configurações
 
 ## 3. WebSocket bridge
 
@@ -90,7 +103,7 @@ Falha:
   "id": "...",
   "value": true,
   "ok": false,
-  "error": "TIMEOUT"
+  "code": "TIMEOUT"
 }
 ```
 
@@ -100,7 +113,7 @@ Falha:
   "id": "...",
   "value": true,
   "ok": false,
-  "error": "UNKNOWN_FILIAL"
+  "code": "UNKNOWN_FILIAL"
 }
 ```
 
@@ -108,25 +121,95 @@ Falha:
 
 ### 3.4 Robustez
 
-- `ping`/`pong` a cada 15s
-- Timeout de 30s sem `pong`
+- `ping`/`pong` WebSocket a cada 15s (camada WS)
+- Timeout de 30s sem `pong` → conexão encerrada
+- Timeout UDP de 800ms (camada de rede) — independente do ping/pong WS
 - Fila máxima de 20 mensagens por cliente; ao exceder, a conexão é encerrada
 
-## 4. Descoberta mDNS
+## 4. Visualização de dispositivos
+
+Cada filial é exibida como um **card** contendo:
+- Nome e IP da filial
+- Indicador de status online/offline
+- Lista de dispositivos daquela filial
+
+**Dispositivos dentro do card:**
+| Tipo    | Representação visual         | Controle         |
+| ------- | ---------------------------- | ---------------- |
+| `light` | Ícone de luz + toggle on/off | Botão toggle     |
+| `ac`    | Ícone de AC + slider 0–100   | Slider com valor |
+
+**Tratamento de offline:**
+- Filial offline exibe badge "offline" (cor diferenciada)
+- Último estado conhecido permanece visível
+- Controles da filial offline ficam **desabilitados**
+- Fila é **removida** da visualização **apenas** se o usuário escolher
+
+## 5. Configurações
+
+### 5.1 Parâmetros ajustáveis
+
+| Parâmetro          | Tipo | Padrão | Descrição                             |
+| ------------------ | ---- | ------ | ------------------------------------- |
+| `polling_interval` | int  | 30     | Intervalo de polling em segundos (≥5) |
+
+### 5.2 Armazenamento
+
+- `polling_interval` é persistido pela Matriz via `PUT /api/config`
+- Histórico de comandos é mantido em `sessionStorage` (por sessão do navegador)
+
+## 6. Ações disponíveis na GUI
+
+### 6.1 Monitoramento
+- Visualizar estado atual dos dispositivos por filial
+- Ver lista de dispositivos da filial
+
+### 6.2 Controle
+- Ligar/desligar luzes (toggle)
+- Ajustar intensidade do ar-condicionado (slider 0–100)
+- Feedback visual após alteração (animação de confirmação)
+
+### 6.3 Gerenciamento
+- Adicionar/editar/remover filiais (nome, IP, porta)
+- Alterar credenciais da Matriz (user/pass)
+- Ver histórico de comandos enviados (timestamp, filial, device, ação, resultado)
+
+## 7. Descoberta mDNS
 
 - Serviço `_http._tcp` com nome `esp32-matriz`
 - Domínio `local`
 - A GUI tenta resolver o host antes de conectar
-- Se a descoberta falhar, o usuário informa o IP manualmente
+- Se a descoberta falhar, o usuário informa o IP manualmente (fallback)
 - O WebSocket usa `ws://<ip_matriz>:80`
 
-## 5. Estado da interface
+## 8. Histórico de comandos
 
-- Filiais offline continuam visíveis
+A GUI mantém um log dos comandos enviados:
+
+```typescript
+interface CommandLog {
+  timestamp: Date;
+  filialName: string;
+  filialIp: string;
+  deviceId: string;
+  action: 'set';
+  value: boolean | number;
+  result: 'ok' | 'TIMEOUT' | 'UNKNOWN_FILIAL' | 'AUTH_FAILED';
+}
+```
+
+- Exibido em seção ou modal acessível da interface
+- Scrollável, com mensagens mais recentes no topo
+- Persistido em `sessionStorage` (não é persistente entre sessões)
+
+## 9. Estado da interface
+
+- Filiais offline continuam visíveis com indicador visual
 - O último estado conhecido permanece exibido até nova atualização
-- Uma confirmação de comando pode sobrescrever temporariamente a visualização até o próximo ciclo
+- Uma confirmação de comando pode sobrescrever temporariamente a visualização até o próximo `status_update`
+- Histórico de comandos é mantido em memória (sessionStorage)
 
-## 6. Integração com a API REST
+## 10. Integração com a API REST
 
 A GUI consome as rotas da Matriz para configuração e manutenção:
 
@@ -139,3 +222,17 @@ A GUI consome as rotas da Matriz para configuração e manutenção:
 - `PUT /api/wifi`
 
 Os detalhes de validação, persistência e códigos de erro dessas rotas estão em [04-matriz.md](04-matriz.md).
+
+## 11. Decisões tomadas
+
+| Decisão      | Opção escolhida                                                      |
+| ------------ | -------------------------------------------------------------------- |
+| Framework UI | React 19 + Vite + TypeScript                                         |
+| Estilização  | TailwindCSS + shadcn/ui + lucide-react                               |
+| Estrutura    | `components/`, `contexts/`, `hooks/`, `lib/`, `types/`               |
+| Layout       | Dashboard único com seções                                           |
+| Visualização | Cards por filial com dispositivos dentro                             |
+| Offline      | Exibir último estado + indicador offline + controles desabilitados   |
+| mDNS         | Implementar com fallback manual de IP                                |
+| Ações        | Toggle luz, slider AC, CRUD filiais, polling, credenciais, histórico |
+| Histórico    | sessionStorage (por sessão do navegador)                             |

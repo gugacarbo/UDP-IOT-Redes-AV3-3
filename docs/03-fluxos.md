@@ -71,7 +71,7 @@ sequenceDiagram
     M->>WS: set_resp (per-filial)
     WS->>G: set_resp
 
-    Note over M,F: Timeout 800ms → set_resp ok:false
+    Note over M,F: Timeout 800ms → set_resp com code: TIMEOUT
 ```
 
 ## Arquitetura da filial

@@ -9,45 +9,65 @@ description: Configuração de WiFi, rede, GUI, build, deploy e debug
 
 ## GUI React
 
-### Estado atual
+### Dependências confirmadas
 
 ```json
 {
   "dependencies": {
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "@tanstack/react-query": "^5.x",
+    "lucide-react": "^0.x",
+    "tailwindcss": "^3.x",
+    "clsx": "^2.x"
   },
   "devDependencies": {
     "vite": "^8.0.3",
     "typescript": "~6.0.2",
     "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^10.1.0"
+    "eslint": "^10.1.0",
+    "tailwindcss": "^3.x",
+    "autoprefixer": "^10.x",
+    "postcss": "^8.x",
+    "@types/node": "^22.x"
   }
 }
 ```
 
-### Dependências faltantes
+### shadcn/ui — Instalação e componentes
 
-- `@tanstack/react-query` — state management async
-- `lucide-react` — ícones
-- `tailwindcss` — utility styling
-- `shadcn/ui` — UI components
-- `react-native-zeroconf` — mDNS discovery (web: bonjour\*)
+shadcn/ui **não é um package npm** — é um CLI que copia componentes para o projeto.
 
-> **Nota mDNS**: web pode usar `bonjour` (JS) ou fallback manual IP.
-> Descoberta coberta em [07-matriz-gui.md](07-matriz-gui.md).
+```bash
+npx shadcn@latest init
+npx shadcn@latest add card button toggle slider badge input dialog scroll-area
+```
+```
 
-### Estrutura alvo
+### shadcn/ui — Componentes confirmados
+
+| Componente   | Uso                                   |
+| ------------ | ------------------------------------- |
+| `Card`       | Card de filial                        |
+| `Button`     | Controles de dispositivos             |
+| `Toggle`     | Liga/desliga luzes                    |
+| `Slider`     | Controle de AC (0-100)                |
+| `Badge`      | Indicador offline                     |
+| `Input`      | Input de IP manual                    |
+| `Dialog`     | Modal de histórico / adição de filial |
+| `ScrollArea` | Área de histórico de comandos         |
+
+### Estrutura confirmada
 
 ```text
 matriz-gui/src/
 ├── main.tsx
 ├── App.tsx
-├── components/
-├── contexts/
-├── hooks/
-├── lib/
-└── types/
+├── components/     # Componentes reutilizáveis (FilialCard, DeviceControl, etc.)
+├── contexts/       # WebSocketContext, FiliaisContext
+├── hooks/          # useWebSocket, useFiliais, useCommandLog
+├── lib/            # api.ts, utils.ts
+└── types/          # index.ts (tipos TypeScript)
 ```
 
 ## WebSocket
@@ -116,9 +136,12 @@ Ele é recarregado no boot para manter o estado entre reinicializações.
 }
 ```
 
-`admin_user` e `admin_pass` são credenciais persistidas da Filial
-e são usadas para validar os campos
-`user` e `pass` recebidos no envelope UDP da Matriz.
+| Campo        | Tipo   | Descrição                          |
+| ------------ | ------ | ---------------------------------- |
+| `port`       | int    | Porta UDP de escuta (padrão 51000) |
+| `admin_user` | string | Usuário para autenticar a Matriz   |
+| `admin_pass` | string | Senha para autenticar a Matriz     |
+| `devices`    | array  | Array de objetos `{id, pin}`       |
 
 ## Rede
 

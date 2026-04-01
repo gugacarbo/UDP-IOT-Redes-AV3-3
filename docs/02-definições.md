@@ -986,8 +986,8 @@ graph TB
 ```json
 {
   "port": 51000,
-  "user": "admin",
-  "pass": "1234",
+  "admin_user": "admin",
+  "admin_pass": "1234",
   "devices": [
     {
       "id": "actuator_light_sala",

@@ -55,7 +55,7 @@ struct FilialState {
     bool online;
     uint32_t missedCycles;              // uint32_t evita overflow em longos períodos offline
     std::map<String, JsonVariant> devices; // último get_resp (id → valor); bool ou int
-    std::vector<String> deviceIds;       // último list_resp
+    std::vector<String> id;              // último list_resp
 };
 ```
 
@@ -78,7 +78,7 @@ struct FilialState {
 
 **Validações obrigatórias ao carregar:**
 - `user` e `pass`: string não vazia
-- `polling_interval`: inteiro `>= 5`
+- `polling_interval`: inteiro `>= 5` e `<= 120`
 - `discovery_every_cycles`: inteiro `>= 1`
 - `filiais`: array de objetos com `name`, `ip`, `port` válidos
 - `filiais`: chave composta `ip:port` deve ser única
@@ -212,7 +212,7 @@ Todos os comandos enviados pela Matriz para a Filial devem conter:
 - **Timeout** por comando: **800 ms** (list_req, get_status, set_req)
 - **Retry**: não realizar reenvio automático
 - **Porta local**: **51000** (fixa)
-- **Correlação**: IP de origem → chave `ip:port` do FilialConfig
+- **Correlação**: IP:porta de origem → chave `ip:port` do FilialConfig
 
 **Contagem de ciclos perdidos (missedCycles):**
 - Apenas timeout de `get_status` incrementa `missedCycles`
@@ -260,7 +260,7 @@ if (filial.missedCycles >= 3) {
 ### 6.1 Comportamento de `set_req` para filial offline
 
 - Matriz **tenta enviar** `set_req` normalmente mesmo com filial offline
-- Timeout de **800 ms** sem resposta → GUI recebe `set_resp` com falha
+- Timeout de **800 ms** sem resposta → GUI recebe `set_resp` com `ok=false` e `code="TIMEOUT"`
 - `missedCycles` **não** é incrementado por timeout de `set_req`
 - Falhas silenciosas na Filial (auth inválida, `id` inexistente, `value` inválido) também resultam em timeout de `set_req`
 
@@ -270,7 +270,7 @@ A bridge WebSocket da Matriz é especificada em [05-matriz-gui.md](05-matriz-gui
 
 **Matriz → GUI (envia):**
 - `status_update` por filial a cada ciclo de polling (inclusive offline — último estado conhecido)
-- `set_resp` após tentativa de `set_req` (sucesso ou timeout)
+- `set_resp` após tentativa de `set_req` (sucesso ou timeout com `code="TIMEOUT"`)
 - Notificação automática quando filial fica offline (3 ciclos sem resposta)
 
 **GUI → Matriz (recebe):**
@@ -323,7 +323,7 @@ Aplica imediatamente: `polling_interval` no próximo ciclo; `discovery_every_cyc
 **Validações:**
 - `user`: string não vazia
 - `pass`: string não vazia
-- `polling_interval`: inteiro >= 5
+- `polling_interval`: inteiro >= 5 e <= 120
 - `discovery_every_cycles`: inteiro >= 1
 - `filiais`: array onde cada item tem `name` (não vazia), `ip` (IPv4 válido), `port` (1–65535)
 - `filiais`: chave composta `ip:port` deve ser única no array
