@@ -1,7 +1,0 @@
-{
-  "mode": "both",
-  "ssid": "MINHA_REDE_WIFI",
-  "password": "SENHA_WIFI",
-  "ap_ssid": "ESP32-MATRIZ",
-  "ap_password": "12345678"
-}

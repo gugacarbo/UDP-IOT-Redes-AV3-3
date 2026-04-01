@@ -1,23 +1,24 @@
 {
-  "name": "udp-iot-monorepo",
-  "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "matriz-gui"
-  ],
-  "scripts": {
-    "dev": "pnpm -C matriz-gui dev",
-    "build": "pnpm -C matriz-gui build",
-    "clean": "pnpm -C matriz-gui clean",
-    "build:gui": "pnpm run --filter @udp-iot/matriz-gui build",
-    "build:matriz": "cd matriz-esp32 && pio run",
-    "build:filial": "cd filial-esp32 && pio run",
-    "build:all": "pnpm run build:gui && pnpm run build:matriz && pnpm run build:filial",
-    "upload:matriz": "cd matriz-esp32 && pio run --target upload",
-    "upload:filial": "cd filial-esp32 && pio run --target upload",
-    "uploadfs:matriz": "cd matriz-esp32 && pio run --target buildfs && pio run --target uploadfs",
-    "uploadfs:filial": "cd filial-esp32 && pio run --target buildfs && pio run --target uploadfs",
-    "monitor:matriz": "cd matriz-esp32 && pio device monitor",
-    "monitor:filial": "cd filial-esp32 && pio device monitor"
-  }
+	"name": "udp-iot-monorepo",
+	"version": "1.0.0",
+	"private": true,
+	"workspaces": [
+		"matriz-gui"
+	],
+	"scripts": {
+		"dev": "pnpm -C matriz-gui dev",
+		"build": "pnpm -C matriz-gui build",
+		"clean": "pnpm -C matriz-gui clean",
+		"build:gui": "pnpm run --filter @udp-iot/matriz-gui build",
+		"build:matriz": "cd matriz-esp32 && pio run",
+		"build:filial": "cd filial-esp32 && pio run",
+		"build:all": "pnpm run build:gui && pnpm run build:matriz && pnpm run build:filial",
+		"upload:matriz": "cd matriz-esp32 && pio run --target upload",
+		"upload:filial": "cd filial-esp32 && pio run --target upload",
+		"uploadfs:matriz": "cd matriz-esp32 && pio run --target buildfs && pio run --target uploadfs",
+		"uploadfs:filial": "cd filial-esp32 && pio run --target buildfs && pio run --target uploadfs",
+		"monitor:matriz": "cd matriz-esp32 && pio device monitor",
+		"monitor:filial": "cd filial-esp32 && pio device monitor",
+		"biome:fix": "biome check --write"
+	}
 }

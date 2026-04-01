@@ -1,0 +1,197 @@
+---
+title: Configuração, Rede e Build
+description: Configuração de WiFi, rede, GUI, build, deploy e debug
+---
+
+## Configuração, rede e build
+
+> Status: 📄 Especificação. Reúne os itens que mudam ambiente, empacotamento e operação.
+
+## GUI React
+
+### Estado atual
+
+```json
+{
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "vite": "^8.0.3",
+    "typescript": "~6.0.2",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.1.0"
+  }
+}
+```
+
+### Dependências faltantes
+
+- `@tanstack/react-query` — state management async
+- `lucide-react` — ícones
+- `tailwindcss` — utility styling
+- `shadcn/ui` — UI components
+- `react-native-zeroconf` — mDNS discovery (web: bonjour\*)
+
+> **Nota mDNS**: web pode usar `bonjour` (JS) ou fallback manual IP.
+> Descoberta coberta em [07-matriz-gui.md](07-matriz-gui.md).
+
+### Estrutura alvo
+
+```text
+matriz-gui/src/
+├── main.tsx
+├── App.tsx
+├── components/
+├── contexts/
+├── hooks/
+├── lib/
+└── types/
+```
+
+## WebSocket
+
+| Item          | Valor                           |
+| ------------- | ------------------------------- |
+| Endpoint      | `ws://<ip_matriz>:80`           |
+| Multi-cliente | Broadcast para todas as abas    |
+| Eventos       | `status_update`, `set_resp`     |
+| Heartbeat     | `ping` / `pong`                 |
+| Reconexão     | Backoff exponencial de 1s a 30s |
+
+`set_resp` é a confirmação de controle recebida após um `set_req` via UDP.
+`status_update` é o broadcast de estado enviado para manter todas as abas sincronizadas.
+
+## Configuração WiFi
+
+### `config_wifi.json`
+
+```json
+{
+  "mode": "station",
+  "ssid": "minha_rede",
+  "password": "minha_senha",
+  "ap_ssid": "ESP32-MATRIZ",
+  "ap_password": "12345678"
+}
+```
+
+Na Matriz, esse arquivo é persistido no LittleFS.
+Ele é recarregado no boot para manter o estado entre reinicializações.
+
+## Configuração da matriz
+
+### `config_matriz.json`
+
+```json
+{
+  "user": "admin",
+  "pass": "admin",
+  "polling_interval": 30,
+  "filiais": [
+    { "name": "Filial Centro", "ip": "192.168.1.100", "port": 51000 },
+    { "name": "Filial Norte", "ip": "192.168.1.101", "port": 51000 }
+  ]
+}
+```
+
+`polling_interval` é inteiro em segundos, com mínimo `5` e padrão `30`.
+
+## Configuração da filial
+
+### `config_filial.json`
+
+```json
+{
+  "port": 51000,
+  "admin_user": "admin",
+  "admin_pass": "admin",
+  "id": [
+    "actuator_light_sala",
+    "sensor_light_sala",
+    "actuator_ac_escritorio",
+    "sensor_ac_escritorio"
+  ]
+}
+```
+
+`admin_user` e `admin_pass` são credenciais persistidas da Filial
+e são usadas para validar os campos
+`user` e `pass` recebidos no envelope UDP da Matriz.
+
+## Rede
+
+| Serviço               | Porta | Descrição             |
+| --------------------- | ----- | --------------------- |
+| HTTP/WS/REST (Matriz) | 80    | GUI e API             |
+| HTTP/WS/REST (Filial) | 80    | GUI local e API       |
+| UDP (Filial escuta)   | 51000 | Comandos da Matriz    |
+| UDP (Matriz escuta)   | 51000 | Respostas das filiais |
+
+## Captive Portal
+
+O portal é ativado quando a conexão Station falha ou quando `config_wifi.json`
+está ausente ou corrompido. Implementado pelo módulo `CaptivePortal` na Matriz.
+
+### Rota do portal
+
+| Método | Rota        | Descrição                          |
+| ------ | ----------- | ---------------------------------- |
+| GET    | `/`         | Página HTML com formulário de WiFi |
+| POST   | `/api/wifi` | Salva SSID e senha e reinicia      |
+
+### Fluxo de provisionamento
+
+```text
+1. Boot sem config_wifi.json → ativa AP "ESP32-MATRIZ"
+2. Usuário conecta no AP → abre navegador
+3. Captive portal detecta e redireciona para página de setup
+4. Usuário preenche SSID/senha e envia via POST /api/wifi
+5. Matriz salva config_wifi.json e reinicia
+6. Próximo boot: conecta na rede STA + mantém AP
+```
+
+## Build e deploy
+
+```makefile
+gui:
+  cd matriz-gui && pnpm install && pnpm run build
+
+build:
+  cp -r matriz-gui/dist/* matriz-esp32/data/
+  cp -r matriz-gui/dist/* filial-esp32/data/
+
+uploadfs-matriz:
+  cd matriz-esp32 && pio run --target buildfs
+  pio run --target uploadfs --upload-port $(UPLOAD_PORT)
+
+uploadfs-filial:
+  cd filial-esp32 && pio run --target buildfs
+  pio run --target uploadfs --upload-port $(UPLOAD_PORT)
+```
+
+### Targets
+
+| Target   | Descrição                   |
+| -------- | --------------------------- |
+| `all`    | Build da GUI, FS e firmware |
+| `matriz` | Build e upload da matriz    |
+| `filial` | Build e upload da filial    |
+| `clean`  | Limpa os artefatos          |
+
+## Debug e teste
+
+| Item           | Valor                                     |
+| -------------- | ----------------------------------------- |
+| Baud rate      | 115200                                    |
+| Logs           | WiFi, UDP, JSON e estado dos dispositivos |
+| Cenário mínimo | 1 matriz + 2 filiais                      |
+
+## Definition of Done
+
+- Build completo (`make all`) executando sem erros.
+- Deploy no ESP32 funcionando com WiFi, UDP e HTTP.
+- Filiais descobertas automaticamente pela Matriz.
+- Cobertura de testes mínima de **95%** em código non-frontend (ESP32 firmware e
+  lógica de build).

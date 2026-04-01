@@ -220,19 +220,20 @@ sequenceDiagram
     participant FB as 🏭 Filial B<br/>(Servidor UDP)
 
     Note over M,FB: PASSO 1: Descobrir dispositivos de cada filial
-    M->>FA: 📡 list_req<br/>{"cmd":"list_req", "user":"admin", "pass":"1234"}
-    M->>FB: 📡 list_req<br/>{"cmd":"list_req", "user":"admin", "pass":"1234"}
+    M->>FA: 📡 list_req<br/>{"cmd":"list_req", "user":"admin", "pass":"admin"}
+    M->>FB: 📡 list_req<br/>{"cmd":"list_req", "user":"admin", "pass":"admin"}
 
     FA-->>M: 📡 list_resp<br/>["actuator_light_sala", "sensor_ac_copa"]
     FB-->>M: 📡 list_resp<br/>["actuator_light_recep", "actuator_ac_sala"]
 
-    Note over M,FB: PASSO 2: Polling automático com intervalo global configurável
+    Note over M,FB: PASSO 2: Polling automático (paralelo, timeout individual 800ms)
     loop A cada intervalo global configurado
-        M->>FA: 📡 get_status<br/>{"cmd":"get_status", "user":"admin", "pass":"1234"}
-        M->>FB: 📡 get_status<br/>{"cmd":"get_status", "user":"admin", "pass":"1234"}
+      M->>FA: 📡 get_status<br/>{"cmd":"get_status", "user":"admin", "pass":"admin"}
+      M->>FB: 📡 get_status<br/>{"cmd":"get_status", "user":"admin", "pass":"admin"}
+      Note right of M: Envia para TODAS<br/>em paralelo
 
-        FA-->>M: 📡 get_resp<br/>{"actuator_light_sala": true, "sensor_ac_copa": 512}
-        FB-->>M: 📡 get_resp<br/>{"actuator_light_recep": false, "actuator_ac_sala": 0}
+        FA-->>M: 📡 get_resp (via :51000)<br/>{"actuator_light_sala": true, "sensor_ac_copa": 512}
+        FB-->>M: 📡 get_resp (via :51000)<br/>{"actuator_light_recep": false, "actuator_ac_sala": 0}
     end
 
     Note over M,FB: PASSO 3: Usuário liga a luz manualmente
@@ -243,7 +244,7 @@ sequenceDiagram
 ### 2.6 WebSocket
 
 - **Reconexão automática:** Se WebSocket cair, tenta reconectar sozinho
-- **Broadcast:** Uma atualização é enviada para TODAS as abas abertas
+- **Broadcast per-filial:** Cada atualização de filial é enviada individualmente para TODAS as abas abertas (incluindo offline com último estado conhecido)
 - **Exponential backoff:** 1s → 2s → 4s → 8s → até 30s entre tentativas
 
 ```mermaid
@@ -274,7 +275,7 @@ sequenceDiagram
     Fil->>Fil: Atualiza GPIO → HIGH
     Fil-->>UDP: set_resp (confirmação)
     UDP->>WS: Repassa confirmação
-    WS->>Nav: Broadcast confirmação
+    WS->>Nav: Broadcast set_resp
     Nav->>Op: ✅ Botão muda para "Ligado"
 ```
 
@@ -517,8 +518,8 @@ graph TB
         direction TB
 
         subgraph Tasks["⚙️ TAREFAS PARALELAS (FreeRTOS)"]
-            T1["📤 UDP Sender Task<br/>Prioridade: 2<br/>Stack: 4KB<br/>Envia comandos para filiais"]
-            T2["📥 UDP Receiver Task<br/>Prioridade: 2<br/>Stack: 4KB<br/>Escuta porta 51000"]
+            T1["📤 UDP Sender Task<br/>Prioridade: 2<br/>Stack: 4KB<br/>Envia comandos em paralelo"]
+            T2["📥 UDP Receiver Task<br/>Prioridade: 2<br/>Stack: 4KB<br/>Escuta porta 51000<br/>Correlação por IP de origem"]
         end
 
         subgraph Core["🧠 NÚCLEO DA APLICAÇÃO"]
@@ -951,7 +952,7 @@ graph TB
     end
 
     subgraph FilialFiles["📁 FILIAL - LittleFS (Flash 4MB)"]
-        F1["⚙️ config_filial.json<br/>・Porta UDP<br/>・Credenciais<br/>・Lista de dispositivos GPIO"]
+        F1["⚙️ config_filial.json<br/>・Porta UDP<br/>・admin_user/admin_pass<br/>・IDs de dispositivos GPIO"]
         F2["📡 config_wifi.json<br/>・SSID da rede<br/>・Senha WiFi<br/>・Modo (Station/AP)"]
         F3["🌐 data/www/<br/>・GUI local (opcional)<br/>・Para debug/config"]
     end
@@ -964,7 +965,7 @@ graph TB
 ```json
 {
   "user": "admin",
-  "pass": "1234",
+  "pass": "admin",
   "polling_interval": 30,
   "filiais": [
     {
