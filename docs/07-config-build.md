@@ -90,10 +90,10 @@ matriz-gui/src/
 
 ```json
 {
-  "mode": "station",
+  "mode": "sta",
   "ssid": "minha_rede",
   "password": "minha_senha",
-  "ap_ssid": "ESP32-MATRIZ",
+  "ap_ssid": "Matriz-Setup",
   "ap_password": "12345678"
 }
 ```
@@ -109,7 +109,7 @@ Ele é recarregado no boot para manter o estado entre reinicializações.
 {
   "user": "admin",
   "pass": "admin",
-  "polling_interval": 30,
+  "polling_interval": 30000,
   "discovery_every_cycles": 10,
   "filiais": [
     { "name": "Filial Centro", "ip": "192.168.1.100", "port": 51000 },
@@ -118,7 +118,7 @@ Ele é recarregado no boot para manter o estado entre reinicializações.
 }
 ```
 
-`polling_interval` é inteiro em segundos, com mínimo `5` e padrão `30`.
+`polling_interval` é inteiro em milissegundos, com mínimo `5000`, padrão `30000` e máximo `120000`.
 `discovery_every_cycles` define a cada quantos ciclos de polling a matriz executa redescoberta (padrão `10`, mínimo `1`).
 
 ## Configuração da filial
@@ -170,7 +170,7 @@ está ausente ou corrompido. Implementado pelo módulo `CaptivePortal` na Matriz
 ### Fluxo de provisionamento
 
 ```text
-1. Boot sem config_wifi.json → ativa AP "ESP32-MATRIZ"
+1. Boot sem config_wifi.json → ativa AP "Matriz-Setup"
 2. Usuário conecta no AP → abre navegador
 3. Captive portal detecta e redireciona para página de setup
 4. Usuário preenche SSID/senha e envia via POST /api/wifi
@@ -180,7 +180,7 @@ está ausente ou corrompido. Implementado pelo módulo `CaptivePortal` na Matriz
 
 **Após conexão Station bem-sucedida:**
 - Modo STA+AP permanece ativo
-- AP continua com SSID "ESP32-MATRIZ" para recovery/reconfiguração
+- AP continua com SSID "Matriz-Setup" para recovery/reconfiguração
 - Portal serve página de status + permite reconfiguração WiFi
 - GUI principal permanece acessível via STA (mDNS ou IP)
 
@@ -192,7 +192,7 @@ gui:
 
 build:
   cp -r matriz-gui/dist/* matriz-esp32/data/
-  cp -r matriz-gui/dist/* filial-esp32/data/  # Filial usa mesma GUI React da Matriz
+  # Filial usa portal HTML simples (não React) — ver architecture/filial.md
 
 uploadfs-matriz:
   cd matriz-esp32 && pio run --target buildfs

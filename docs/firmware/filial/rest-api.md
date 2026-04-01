@@ -27,8 +27,11 @@ Retorna a configuração Wi-Fi atual.
 
 ```json
 {
+    "mode": "sta",
     "ssid": "MinhaRede",
-    "pass": "senha123"
+    "password": "senha123",
+    "ap_ssid": "ESP32-192.168.1.101-Setup",
+    "ap_password": "12345678"
 }
 ```
 
@@ -41,7 +44,7 @@ Atualiza a configuração Wi-Fi. Reinicia o ESP32 em modo STA.
 ```json
 {
     "ssid": "NovaRede",
-    "pass": "novaSenha"
+    "password": "novaSenha"
 }
 ```
 
@@ -66,20 +69,12 @@ Retorna a configuração completa da filial.
 
 ```json
 {
-    "filial_id": "FIL001",
-    "label": "Filial Centro",
     "port": 51000,
-    "user": "admin",
-    "pass": "1234",
+    "admin_user": "admin",
+    "admin_pass": "admin",
     "devices": [
-        {
-            "id": "luz_sala",
-            "label": "Luz da Sala",
-            "type": "light",
-            "role": "sensor_actuator",
-            "gpio_read": 23,
-            "gpio_write": 22
-        }
+        { "id": "actuator_light_sala", "pin": 22 },
+        { "id": "sensor_light_sala", "pin": 23 }
     ]
 }
 ```
@@ -92,9 +87,8 @@ Atualiza a configuração da filial (sem alterar dispositivos).
 
 ```json
 {
-    "label": "Filial Centro - Atualizada",
-    "user": "novoUser",
-    "pass": "novaSenha"
+    "admin_user": "novoUser",
+    "admin_pass": "novaSenha"
 }
 ```
 
@@ -119,16 +113,8 @@ Lista todos os dispositivos com seus estados atuais.
 
 ```json
 [
-    {
-        "id": "luz_sala",
-        "label": "Luz da Sala",
-        "type": "light",
-        "role": "sensor_actuator",
-        "value": 1,
-        "status": "ok",
-        "gpio_read": 23,
-        "gpio_write": 22
-    }
+    { "id": "actuator_light_sala", "pin": 22, "value": 1 },
+    { "id": "sensor_light_sala", "pin": 23, "value": 1 }
 ]
 ```
 
@@ -140,12 +126,8 @@ Adiciona um novo dispositivo à filial.
 
 ```json
 {
-    "id": "luz_quarto",
-    "label": "Luz do Quarto",
-    "type": "light",
-    "role": "sensor_actuator",
-    "gpio_read": 5,
-    "gpio_write": 18
+    "id": "actuator_light_quarto",
+    "pin": 18
 }
 ```
 
@@ -166,9 +148,7 @@ Atualiza a configuração de um dispositivo.
 
 ```json
 {
-    "label": "Luz do Quarto - Renomeada",
-    "gpio_read": 19,
-    "gpio_write": 21
+    "pin": 21
 }
 ```
 
@@ -206,7 +186,6 @@ Retorna o status da filial.
 
 ```json
 {
-    "filial_id": "FIL001",
     "wifi_ssid": "MinhaRede",
     "wifi_rssi": -52,
     "ip": "192.168.1.101",

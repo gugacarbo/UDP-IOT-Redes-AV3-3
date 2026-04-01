@@ -19,79 +19,80 @@ Cada ESP32 mantém seus arquivos de configuração no **LittleFS**. Todos são J
 
 ## `config_wifi.json` — Matriz e Filial
 
-Credenciais da rede Wi-Fi para conexão em modo STA.
+Configuração Wi-Fi com suporte a modo STA, AP e AP simultâneo.
 
 ```json
 {
+    "mode": "sta",
     "ssid": "MinhaRede",
-    "pass": "senha123"
+    "password": "senha123",
+    "ap_ssid": "Matriz-Setup",
+    "ap_password": "12345678"
 }
 ```
 
-| Campo  | Tipo   | Obrigatório | Descrição          |
-| ------ | ------ | ----------- | ------------------ |
-| `ssid` | string | Sim         | Nome da rede Wi-Fi |
-| `pass` | string | Sim         | Senha da rede      |
+| Campo         | Tipo   | Obrigatório | Descrição                         |
+| ------------- | ------ | ----------- | --------------------------------- |
+| `mode`        | string | Sim         | `"sta"`, `"ap"` ou `"sta+ap"`     |
+| `ssid`        | string | Sim         | Nome da rede Wi-Fi (STA)          |
+| `password`    | string | Sim         | Senha da rede (STA)               |
+| `ap_ssid`     | string | Não         | SSID do AP (padrão: veja abaixo)  |
+| `ap_password` | string | Não         | Senha do AP (mínimo 8 caracteres) |
 
+> **AP SSID padrão**: Matriz usa `Matriz-Setup`; Filial usa `ESP32-<device_ip>-Setup`.
 > Se este arquivo não existir ou for inválido, o ESP32 entra em modo AP para provisionamento.
 
 ---
 
 ## `config_matriz.json` — Matriz
 
-Configuração completa da Matriz, incluindo lista de filiais.
+Configuração completa da Matriz, incluindo lista de filiais e credenciais globais.
 
 ```json
 {
     "filiais": [
         {
-            "filial_id": "FIL001",
-            "label": "Filial Centro",
+            "name": "Filial Centro",
             "ip": "192.168.1.101",
-            "port": 51000,
-            "user": "admin",
-            "pass": "1234"
+            "port": 51000
         },
         {
-            "filial_id": "FIL002",
-            "label": "Filial Norte",
+            "name": "Filial Norte",
             "ip": "192.168.1.102",
-            "port": 51000,
-            "user": "admin",
-            "pass": "5678"
+            "port": 51000
         }
     ],
     "polling_interval": 30000,
-    "max_filiais": 10
+    "discovery_every_cycles": 10,
+    "user": "admin",
+    "pass": "admin"
 }
 ```
 
 ### Campos de Filial
 
-| Campo       | Tipo   | Obrigatório | Descrição                        |
-| ----------- | ------ | ----------- | -------------------------------- |
-| `filial_id` | string | Sim         | Identificador único (ex: FIL001) |
-| `label`     | string | Sim         | Nome amigável                    |
-| `ip`        | string | Sim         | IP da filial na rede local       |
-| `port`      | number | Não         | Porta UDP (padrão: 51000)        |
-| `user`      | string | Sim         | Usuário para autenticação UDP    |
-| `pass`      | string | Sim         | Senha para autenticação UDP      |
+| Campo  | Tipo   | Obrigatório | Descrição                  |
+| ------ | ------ | ----------- | -------------------------- |
+| `name` | string | Sim         | Nome amigável              |
+| `ip`   | string | Sim         | IP da filial na rede local |
+| `port` | number | Não         | Porta UDP (padrão: 51000)  |
 
 ### Parâmetros Globais
 
-| Campo              | Tipo   | Padrão | Descrição                    |
-| ------------------ | ------ | ------ | ---------------------------- |
-| `polling_interval` | number | 30000  | Intervalo de polling (ms)    |
-| `max_filiais`      | number | 10     | Máximo de filiais suportadas |
+| Campo                    | Tipo   | Padrão | Descrição                            |
+| ------------------------ | ------ | ------ | ------------------------------------ |
+| `polling_interval`       | number | 30000  | Intervalo de polling (ms)            |
+| `discovery_every_cycles` | number | 10     | Ciclos entre descobertas automáticas |
+| `user`                   | string | —      | Usuário global para autenticação UDP |
+| `pass`                   | string | —      | Senha global para autenticação UDP   |
 
 ### Validação
 
-| Regra                          | Erro                |
-| ------------------------------ | ------------------- |
-| `filial_id` duplicado          | Rejeitado na adição |
-| `filiais.length > max_filiais` | Rejeitado na adição |
-| `filial_id` vazio ou ausente   | Rejeitado           |
-| `ip` em formato inválido       | Rejeitado           |
+| Regra                    | Erro                |
+| ------------------------ | ------------------- |
+| `ip` duplicado           | Rejeitado na adição |
+| `ip` em formato inválido | Rejeitado           |
+| `name` vazio ou ausente  | Rejeitado           |
 
 ---
 
@@ -101,56 +102,40 @@ Configuração completa da Filial, incluindo dispositivos e mapeamento GPIO.
 
 ```json
 {
-    "filial_id": "FIL001",
-    "label": "Filial Centro",
     "port": 51000,
-    "user": "admin",
-    "pass": "1234",
+    "admin_user": "admin",
+    "admin_pass": "admin",
     "devices": [
-        {
-            "id": "luz_sala",
-            "label": "Luz da Sala",
-            "type": "light",
-            "role": "sensor_actuator",
-            "gpio_read": 23,
-            "gpio_write": 22
-        },
-        {
-            "id": "ar_sala",
-            "label": "Ar-condicionado da Sala",
-            "type": "ac",
-            "role": "sensor_actuator",
-            "gpio_read": 34,
-            "gpio_write": 25
-        }
+        { "id": "actuator_light_sala", "pin": 22 },
+        { "id": "sensor_light_sala", "pin": 23 },
+        { "id": "actuator_ac_sala", "pin": 25 },
+        { "id": "sensor_ac_sala", "pin": 34 }
     ]
 }
 ```
 
 ### Campos de Dispositivo
 
-| Campo        | Tipo   | Obrigatório | Descrição                          |
-| ------------ | ------ | ----------- | ---------------------------------- |
-| `id`         | string | Sim         | Identificador único do dispositivo |
-| `label`      | string | Sim         | Nome amigável                      |
-| `type`       | string | Sim         | `"light"` ou `"ac"`                |
-| `role`       | string | Sim         | `"sensor_actuator"`                |
-| `gpio_read`  | number | Sim         | GPIO para leitura do sensor        |
-| `gpio_write` | number | Sim         | GPIO para escrita no atuador       |
+| Campo | Tipo   | Obrigatório | Descrição                                                |
+| ----- | ------ | ----------- | -------------------------------------------------------- |
+| `id`  | string | Sim         | Identificador único no formato `<tipo>_<device>_<local>` |
+| `pin` | number | Sim         | GPIO associado ao dispositivo                            |
 
-### GPIO — Luz (`type: "light"`)
+> O prefixo do `id` define o comportamento: `sensor_*` → leitura, `actuator_*` → escrita.
 
-| GPIO         | Modo   | Função           | Valores |
-| ------------ | ------ | ---------------- | ------- |
-| `gpio_read`  | INPUT  | `digitalRead()`  | 0 ou 1  |
-| `gpio_write` | OUTPUT | `digitalWrite()` | 0 ou 1  |
+### GPIO — Sensores (prefixo `sensor_`)
 
-### GPIO — Ar-condicionado (`type: "ac"`)
+| Dispositivo          | ID                  | GPIO | Função          | Valores |
+| -------------------- | ------------------- | ---- | --------------- | ------- |
+| Sensor de Luz (Sala) | `sensor_light_sala` | 23   | `digitalRead()` | 0 ou 1  |
+| Sensor de AC (Sala)  | `sensor_ac_sala`    | 34   | `analogRead()`  | 0–1023  |
 
-| GPIO         | Modo   | Função            | Valores |
-| ------------ | ------ | ----------------- | ------- |
-| `gpio_read`  | ANALOG | `analogRead()`    | 0–1023  |
-| `gpio_write` | OUTPUT | `ledcWrite()` PWM | 0–1023  |
+### GPIO — Atuadores (prefixo `actuator_`)
+
+| Dispositivo        | ID                    | GPIO | Função            | Valores |
+| ------------------ | --------------------- | ---- | ----------------- | ------- |
+| Atuador Luz (Sala) | `actuator_light_sala` | 22   | `digitalWrite()`  | 0 ou 1  |
+| Atuador AC (Sala)  | `actuator_ac_sala`    | 25   | `ledcWrite()` PWM | 0–1023  |
 
 ---
 

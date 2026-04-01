@@ -27,51 +27,31 @@ O firmware da Filial roda em um ESP32 e atua como **servidor UDP** do sistema. S
 
 ```json
 {
-    "filial_id": "FIL001",
-    "label": "Filial Centro",
     "port": 51000,
-    "user": "admin",
-    "pass": "1234",
+    "admin_user": "admin",
+    "admin_pass": "admin",
     "devices": [
-        {
-            "id": "luz_sala",
-            "label": "Luz da Sala",
-            "type": "light",
-            "role": "sensor_actuator",
-            "gpio_read": 23,
-            "gpio_write": 22
-        },
-        {
-            "id": "ar_sala",
-            "label": "Ar-condicionado da Sala",
-            "type": "ac",
-            "role": "sensor_actuator",
-            "gpio_read": 34,
-            "gpio_write": 25
-        }
+        { "id": "actuator_light_sala", "pin": 22 },
+        { "id": "sensor_light_sala", "pin": 23 },
+        { "id": "actuator_ac_sala", "pin": 25 },
+        { "id": "sensor_ac_sala", "pin": 34 }
     ]
 }
 ```
 
-| Campo       | Tipo   | Descrição                          |
-| ----------- | ------ | ---------------------------------- |
-| `filial_id` | string | Identificador único da filial      |
-| `label`     | string | Nome amigável                      |
-| `port`      | number | Porta UDP (padrão 51000)           |
-| `user`      | string | Usuário para autenticação UDP      |
-| `pass`      | string | Senha para autenticação UDP        |
-| `devices`   | array  | Lista de dispositivos configurados |
+| Campo        | Tipo   | Descrição                                     |
+| ------------ | ------ | --------------------------------------------- |
+| `port`       | number | Porta UDP (padrão 51000)                      |
+| `admin_user` | string | Usuário para autenticação UDP                 |
+| `admin_pass` | string | Senha para autenticação UDP                   |
+| `devices`    | array  | Lista de dispositivos configurados            |
 
 ### Dispositivo (Config)
 
-| Campo        | Tipo   | Descrição                          |
-| ------------ | ------ | ---------------------------------- |
-| `id`         | string | Identificador único do dispositivo |
-| `label`      | string | Nome amigável                      |
-| `type`       | string | `"light"` ou `"ac"`                |
-| `role`       | string | `"sensor_actuator"`                |
-| `gpio_read`  | number | GPIO para leitura (sensor)         |
-| `gpio_write` | number | GPIO para escrita (atuador)        |
+| Campo | Tipo   | Descrição                                                |
+| ----- | ------ | -------------------------------------------------------- |
+| `id`  | string | Identificador único no formato `<tipo>_<device>_<local>` |
+| `pin` | number | GPIO associado ao dispositivo                            |
 
 ---
 
@@ -81,7 +61,6 @@ O firmware da Filial roda em um ESP32 e atua como **servidor UDP** do sistema. S
 Device (base)
 ├── Sensor        → read() via GPIO
 └── Actuator      → write() via GPIO
-    └── SensorActuator → herda ambos
 
 DeviceManager
 ├── devices[]     → lista de Device*
@@ -106,19 +85,19 @@ UDPServer
 
 ## Mapeamento GPIO
 
-### Luz (`type: "light"`)
+### Sensores
 
-| Operação | GPIO Mode | Função           | Valores    |
-| -------- | --------- | ---------------- | ---------- |
-| Leitura  | `INPUT`   | `digitalRead()`  | `0` ou `1` |
-| Escrita  | `OUTPUT`  | `digitalWrite()` | `0` ou `1` |
+| Dispositivo           | ID                    | GPIO | Função           | Valores    |
+| --------------------- | --------------------- | ---- | ---------------- | ---------- |
+| Sensor de Luz (Sala)  | `sensor_light_sala`   | 23   | `digitalRead()`  | `0` ou `1` |
+| Sensor de AC (Sala)   | `sensor_ac_sala`      | 34   | `analogRead()`   | `0–1023`   |
 
-### Ar-condicionado (`type: "ac"`)
+### Atuadores
 
-| Operação | GPIO Mode | Função              | Valores  |
-| -------- | --------- | ------------------- | -------- |
-| Leitura  | `ANALOG`  | `analogRead()`      | `0–1023` |
-| Escrita  | `OUTPUT`  | `ledcWrite()` (PWM) | `0–1023` |
+| Dispositivo              | ID                      | GPIO | Função              | Valores    |
+| ------------------------ | ----------------------- | ---- | ------------------- | ---------- |
+| Atuador Luz (Sala)       | `actuator_light_sala`   | 22   | `digitalWrite()`    | `0` ou `1` |
+| Atuador AC (Sala)        | `actuator_ac_sala`      | 25   | `ledcWrite()` (PWM) | `0–1023`   |
 
 ---
 
@@ -132,7 +111,7 @@ flowchart TD
     PARSE --> VALID{JSON válido?}
     VALID -->|Não| IGNORE[Ignora silenciosamente]
     VALID -->|Sim| AUTH{user/pass válido?}
-    AUTH -->|Não| ERR[Responde AUTH_ERROR]
+    AUTH -->|Não| IGNORE2[Ignora silenciosamente]
     AUTH -->|Sim| CMD{Tipo de cmd?}
     CMD -->|list_req| LIST[handleList]
     CMD -->|get_status| STATUS[handleGetStatus]
@@ -143,24 +122,24 @@ flowchart TD
 ### `handleList()`
 
 1. Itera sobre `DeviceManager::devices[]`
-2. Para cada dispositivo, extrai `id`, `label`, `type`, `role`
-3. Monta resposta `list_resp` com array `devices`
+2. Para cada dispositivo, extrai `id`
+3. Monta resposta `list_resp` com array `devices` (apenas IDs)
 4. Envia via UDP para IP:porta de origem
 
 ### `handleGetStatus()`
 
 1. Itera sobre `DeviceManager::devices[]`
 2. Para cada dispositivo, chama `read()` para obter valor atual
-3. Monta resposta `get_resp` com array `devices` (inclui `value` e `status`)
+3. Monta resposta `get_resp` com array `devices` (inclui `id` e `value`)
 4. Envia via UDP para IP:porta de origem
 
 ### `handleSet()`
 
-1. Busca dispositivo por `device_id` via `DeviceManager::getById()`
+1. Busca dispositivo por `id` via `DeviceManager::getById()`
 2. Se não encontrado → responde `NOT_FOUND`
 3. Chama `write(value)` no atuador
 4. Lê o valor de volta para confirmar
-5. Monta resposta `set_resp` com `code`, `value`
+5. Monta resposta `set_resp` com `id`, `value`
 6. Envia via UDP para IP:porta de origem
 
 ---

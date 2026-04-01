@@ -67,7 +67,7 @@ struct FilialState {
 {
   "user": "admin",
   "pass": "admin",
-  "polling_interval": 30,
+  "polling_interval": 30000,
   "discovery_every_cycles": 10,
   "filiais": [
     { "name": "Filial BH", "ip": "10.0.0.1", "port": 51000 },
@@ -78,7 +78,7 @@ struct FilialState {
 
 **Validações obrigatórias ao carregar:**
 - `user` e `pass`: string não vazia
-- `polling_interval`: inteiro `>= 5` e `<= 120` (valores fora do range são automaticamente ajustados para o limite mais próximo, com log de warning)
+- `polling_interval`: inteiro `>= 5000` e `<= 120000` em milissegundos (valores fora do range são automaticamente ajustados para o limite mais próximo, com log de warning)
 - `discovery_every_cycles`: inteiro `>= 1`
 - `filiais`: array de objetos com `name`, `ip`, `port` válidos
 - `filiais`: chave composta `ip:port` deve ser única
@@ -88,7 +88,7 @@ struct FilialState {
 Quando `config_matriz.json` não existir ou estiver inválido:
 1. `user="admin"`, `pass="admin"`
 2. `filiais` como array vazio
-3. `polling_interval=30`, `discovery_every_cycles=10`
+3. `polling_interval=30000`, `discovery_every_cycles=10`
 4. Expor API REST para provisioning
 5. Persistir após primeiro `PUT /api/config` válido
 
@@ -99,7 +99,7 @@ Quando `config_matriz.json` não existir ou estiver inválido:
 ### 3.2 Fallback WiFi e Modo AP
 
 Quando `config_wifi.json` não existir ou estiver inválido:
-1. Ativa **AP** com SSID `ESP32-MATRIZ` + **Captive Portal** na porta 80
+1. Ativa **AP** com SSID `Matriz-Setup` + **Captive Portal** na porta 80
 2. Serve formulário HTML de provisionamento Wi-Fi
 3. Após `PUT /api/wifi` válido, persiste `config_wifi.json` e reinicia
 4. Boot seguinte: se `config_wifi.json` válido → modo **STA+AP**
@@ -233,7 +233,7 @@ Todos os comandos enviados pela Matriz para a Filial devem conter:
 
 ### 5.1 Polling (`get_status`)
 
-- **Intervalo:** `polling_interval` (padrão 30s, mín 5s)
+- **Intervalo:** `polling_interval` (padrão 30000ms, mín 5000ms)
 - **Estratégia:** paralelo — todas filiais simultaneamente
 - **Timeout individual:** 800ms por filial
 - **Runtime:** `PUT /api/config` aplica novo intervalo no próximo ciclo (timer reiniciado)
@@ -332,7 +332,7 @@ Aplica imediatamente: `polling_interval` no próximo ciclo; `discovery_every_cyc
 **Validações:**
 - `user`: string não vazia
 - `pass`: string não vazia
-- `polling_interval`: inteiro >= 5 e <= 120
+- `polling_interval`: inteiro >= 5000 e <= 120000 (em ms)
 - `discovery_every_cycles`: inteiro >= 1
 - `filiais`: array onde cada item tem `name` (não vazia), `ip` (IPv4 válido), `port` (1–65535)
 - `filiais`: chave composta `ip:port` deve ser única no array
@@ -340,8 +340,6 @@ Aplica imediatamente: `polling_interval` no próximo ciclo; `discovery_every_cyc
 **Erros:**
 - `400` — qualquer campo de validação falha
 - `409` — conflito de `ip:port` entre filiais
-
-#### `GET /api/filiais`
 ```json
 {
   "filiais": [
@@ -420,7 +418,7 @@ Todas respostas: `application/json`.
 ## 9. Fluxo operacional
 
 1. **Boot**: inicializa LittleFS e módulos
-2. **WiFi**: sem `config_wifi.json` → AP `ESP32-MATRIZ` + captive portal; caso contrário → STA+AP
+2. **WiFi**: sem `config_wifi.json` → AP `Matriz-Setup` + captive portal; caso contrário → STA+AP
 3. **Config**: carrega `config_matriz.json` com fallback
 4. **Descoberta**: `list_req` para todas filiais
 5. **Polling**: `get_status` em paralelo a cada `polling_interval` (800ms timeout individual)

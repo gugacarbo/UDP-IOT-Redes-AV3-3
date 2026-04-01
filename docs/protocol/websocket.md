@@ -39,13 +39,14 @@ A GUI React se comunica com a Matriz ESP32 via **WebSocket** na porta **80**. O 
 ```json
 {
   "cmd": "set_req",
-  "filial_id": "FIL001",
-  "device_id": "luz_sala",
+  "filial_ip": "192.168.1.101",
+  "filial_port": 51000,
+  "id": "actuator_light_sala",
   "value": 1
 }
 ```
 
-> **Nota**: A GUI **não** envia `user`/`pass`. A Matriz injeta as credenciais antes de encaminhar via UDP.
+> **Nota**: A GUI **não** envia `user`/`pass`. A Matriz injeta as credenciais globais antes de encaminhar via UDP.
 
 ---
 
@@ -58,18 +59,11 @@ A GUI React se comunica com a Matriz ESP32 via **WebSocket** na porta **80**. O 
   "cmd": "list_resp",
   "filiais": [
     {
-      "filial_id": "FIL001",
-      "label": "Filial Centro",
+      "name": "Filial Centro",
       "ip": "192.168.1.101",
+      "port": 51000,
       "online": true,
-      "devices": [
-        {
-          "id": "luz_sala",
-          "label": "Luz da Sala",
-          "type": "light",
-          "role": "sensor_actuator"
-        }
-      ]
+      "devices": ["actuator_light_sala", "sensor_light_sala", "actuator_ac_escritorio"]
     }
   ]
 }
@@ -82,18 +76,15 @@ Enviado automaticamente após cada ciclo de polling (por filial).
 ```json
 {
   "cmd": "status_update",
-  "filial_id": "FIL001",
+  "name": "Filial Centro",
+  "ip": "192.168.1.101",
+  "port": 51000,
   "online": true,
-  "devices": [
-    {
-      "id": "luz_sala",
-      "label": "Luz da Sala",
-      "type": "light",
-      "role": "sensor_actuator",
-      "value": 1,
-      "status": "ok"
-    }
-  ]
+  "devices": {
+    "actuator_light_sala": 1,
+    "sensor_light_sala": 0,
+    "actuator_ac_escritorio": 720
+  }
 }
 ```
 
@@ -102,8 +93,9 @@ Enviado automaticamente após cada ciclo de polling (por filial).
 ```json
 {
   "cmd": "set_resp",
-  "filial_id": "FIL001",
-  "device_id": "luz_sala",
+  "filial_ip": "192.168.1.101",
+  "filial_port": 51000,
+  "id": "actuator_light_sala",
   "code": "OK",
   "value": 1
 }
@@ -119,7 +111,7 @@ sequenceDiagram
     participant WS as WebSocket
     participant M as Matriz
 
-    Note over M: A cada polling_interval (30s)
+    Note over M: A cada polling_interval (30000ms)
 
     M->>WS: status_update (por filial)
     WS->>G: status_update

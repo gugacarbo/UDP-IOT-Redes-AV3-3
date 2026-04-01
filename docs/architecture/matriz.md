@@ -10,7 +10,7 @@ description: Arquitetura interna da Matriz — polling UDP, bridge WebSocket, pe
 ```mermaid
 flowchart TB
     subgraph Scheduler["UDP Polling Scheduler"]
-        TIMER[Timer 30s]
+        TIMER[Timer (polling_interval)]
         TIMER --> CMD[Envia get_status]
     end
 

@@ -40,15 +40,21 @@ Armazenado no LittleFS de cada ESP32.
 
 ```json
 {
+    "mode": "sta",
     "ssid": "MinhaRede",
-    "pass": "senha123"
+    "password": "senha123",
+    "ap_ssid": "Matriz-Setup",
+    "ap_password": "12345678"
 }
 ```
 
-| Campo  | Tipo   | Obrigatório | Descrição          |
-| ------ | ------ | ----------- | ------------------ |
-| `ssid` | string | Sim         | Nome da rede Wi-Fi |
-| `pass` | string | Sim         | Senha da rede      |
+| Campo         | Tipo   | Obrigatório | Descrição                         |
+| ------------- | ------ | ----------- | --------------------------------- |
+| `mode`        | string | Sim         | `"sta"`, `"ap"` ou `"sta+ap"`     |
+| `ssid`        | string | Sim         | Nome da rede Wi-Fi (STA)          |
+| `password`    | string | Sim         | Senha da rede (STA)               |
+| `ap_ssid`     | string | Não         | SSID do AP                        |
+| `ap_password` | string | Não         | Senha do AP (mínimo 8 caracteres) |
 
 ### Valores Padrão (Fallback)
 
@@ -64,12 +70,12 @@ Armazenado no LittleFS de cada ESP32.
 
 ### Rede AP Padrão
 
-| Parâmetro | Matriz         | Filial         |
-| --------- | -------------- | -------------- |
-| SSID      | `Matriz-Setup` | `Filial-Setup` |
-| Senha     | `12345678`     | `12345678`     |
-| IP        | `192.168.4.1`  | `192.168.4.1`  |
-| Porta     | `80`           | `80`           |
+| Parâmetro | Matriz         | Filial                    |
+| --------- | -------------- | ------------------------- |
+| SSID      | `Matriz-Setup` | `ESP32-<device_ip>-Setup` |
+| Senha     | `12345678`     | `12345678`                |
+| IP        | `192.168.4.1`  | `192.168.4.1`             |
+| Porta     | `80`           | `80`                      |
 
 ### Endpoints do Portal
 
@@ -107,7 +113,7 @@ A Matriz anuncia seu serviço via mDNS para descoberta pela GUI.
 ## Fluxo de Provisionamento Completo
 
 1. **ESP32 boot** sem `config_wifi.json` válido
-2. Entra em modo **AP** com SSID `[Matriz|Filial]-Setup`
+2. Entra em modo **AP** com SSID padrão (`Matriz-Setup` ou `ESP32-<ip>-Setup`)
 3. Usuário conecta ao Wi-Fi do ESP32
 4. Navegador redireciona automaticamente para o captive portal
 5. Usuário preenche SSID e senha da rede local

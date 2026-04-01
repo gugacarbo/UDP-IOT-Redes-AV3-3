@@ -60,7 +60,7 @@ sequenceDiagram
     participant M as Matriz
     participant F as Filial
 
-    Note over M: Polling automático 30s (paralelo)
+    Note over M: Polling automático (polling_interval, padrão 30s)
 
     M->>F: get_status (unicast)
     F->>M: get_resp (unicast :51000)

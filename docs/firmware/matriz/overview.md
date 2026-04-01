@@ -28,8 +28,7 @@ O firmware da Matriz roda em um ESP32 e atua como **hub centralizador** do siste
 
 ```cpp
 struct FilialRuntime {
-    String filial_id;
-    String label;
+    String name;
     String ip;
     uint16_t port;       // padrão 51000
     bool online;
@@ -42,12 +41,8 @@ struct FilialRuntime {
 
 ```cpp
 struct DeviceState {
-    String id;
-    String label;
-    String type;         // "light" | "ac"
-    String role;         // "sensor_actuator"
+    String id;           // ex: "actuator_light_sala"
     int value;           // 0|1 (light) ou 0-1023 (ac)
-    String status;       // "ok"
 };
 ```
 
@@ -61,31 +56,35 @@ struct DeviceState {
 {
     "filiais": [
         {
-            "filial_id": "FIL001",
-            "label": "Filial Centro",
+            "name": "Filial Centro",
             "ip": "192.168.1.101",
-            "port": 51000,
-            "user": "admin",
-            "pass": "1234"
+            "port": 51000
         }
     ],
     "polling_interval": 30000,
-    "max_filiais": 10
+    "discovery_every_cycles": 10,
+    "user": "admin",
+    "pass": "admin"
 }
 ```
 
-| Campo              | Tipo   | Padrão | Descrição                     |
-| ------------------ | ------ | ------ | ----------------------------- |
-| `filiais`          | array  | `[]`   | Lista de filiais configuradas |
-| `polling_interval` | number | 30000  | Intervalo de polling (ms)     |
-| `max_filiais`      | number | 10     | Máximo de filiais suportadas  |
+| Campo                     | Tipo   | Padrão | Descrição                             |
+| ------------------------- | ------ | ------ | ------------------------------------- |
+| `filiais`                 | array  | `[]`   | Lista de filiais configuradas         |
+| `polling_interval`        | number | 30000  | Intervalo de polling (ms)             |
+| `discovery_every_cycles`  | number | 10     | Ciclos entre descobertas automáticas  |
+| `user`                    | string | —      | Usuário global para autenticação UDP  |
+| `pass`                    | string | —      | Senha global para autenticação UDP    |
 
 ### `config_wifi.json` (comum)
 
 ```json
 {
+    "mode": "sta",
     "ssid": "MinhaRede",
-    "pass": "senha123"
+    "password": "senha123",
+    "ap_ssid": "Matriz-Setup",
+    "ap_password": "12345678"
 }
 ```
 
@@ -151,7 +150,7 @@ flowchart LR
 ```
 
 1. GUI envia `set_req` via WebSocket (sem `user`/`pass`)
-2. Matriz injeta credenciais da filial no comando
+2. Matriz injeta credenciais globais (`user`/`pass`) no comando
 3. Envia UDP unicast para a filial
 4. Aguarda resposta (timeout 800ms)
 5. Retorna `set_resp` para a GUI via WebSocket

@@ -46,12 +46,12 @@ pio device monitor
 [I] mDNS iniciado: matriz.local
 [I] WebSocket server na porta 80
 [I] UDP Response Handler na porta 51000
-[I] Polling iniciado (intervalo: 30s)
-[D] Enviando get_status para FIL001 (192.168.1.101)
-[D] Resposta OK de FIL001 (2 dispositivos)
+[I] Polling iniciado (intervalo: 30000ms)
+[D] Enviando get_status para Filial Centro (192.168.1.101)
+[D] Resposta OK de Filial Centro (2 dispositivos)
 [D] status_update enviado via WS
-[W] Timeout de FIL002 (missed: 2/3)
-[E] Filial FIL002 offline (3 ciclos sem resposta)
+[W] Timeout de Filial Norte (missed: 2/3)
+[E] Filial Norte offline (3 ciclos sem resposta)
 ```
 
 ---
@@ -86,13 +86,13 @@ Usando `netcat` para simular a Matriz enviando comandos para a Filial:
 
 ```bash
 # Enviar list_req
-echo '{"cmd":"list_req","user":"admin","pass":"1234"}' | nc -u -w1 192.168.1.101 51000
+echo '{"cmd":"list_req","user":"admin","pass":"admin"}' | nc -u -w1 192.168.1.101 51000
 
 # Enviar get_status
-echo '{"cmd":"get_status","user":"admin","pass":"1234"}' | nc -u -w1 192.168.1.101 51000
+echo '{"cmd":"get_status","user":"admin","pass":"admin"}' | nc -u -w1 192.168.1.101 51000
 
 # Enviar set_req (desligar luz)
-echo '{"cmd":"set_req","user":"admin","pass":"1234","filial_id":"FIL001","device_id":"luz_sala","value":0}' | nc -u -w1 192.168.1.101 51000
+echo '{"cmd":"set_req","user":"admin","pass":"admin","id":"actuator_light_sala","value":0}' | nc -u -w1 192.168.1.101 51000
 ```
 
 ### Teste de WebSocket
@@ -109,7 +109,7 @@ wscat -c ws://matriz.local/ws
 # Enviar comandos
 > {"cmd":"list_req"}
 > {"cmd":"get_status"}
-> {"cmd":"set_req","filial_id":"FIL001","device_id":"luz_sala","value":1}
+> {"cmd":"set_req","filial_ip":"192.168.1.101","filial_port":51000,"id":"actuator_light_sala","value":1}
 ```
 
 ### Teste de REST API
@@ -135,7 +135,7 @@ curl http://192.168.1.101/api/status
 | -------------------------- | -------------------------------------- |
 | `TIMEOUT` no polling       | Verificar IP da filial no config       |
 | Sem resposta UDP           | Verificar se filial está na mesma rede |
-| `AUTH_ERROR`               | Verificar `user`/`pass` no config      |
+| `TIMEOUT` recorrente       | Verificar `user`/`pass` no config      |
 | Filial offline persistente | Verificar conexão Wi-Fi da filial      |
 
 ### GUI não carrega

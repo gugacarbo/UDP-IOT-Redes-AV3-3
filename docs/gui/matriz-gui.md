@@ -75,7 +75,7 @@ Cada filial é exibida como um **card** contendo:
 
 | Elemento       | Descrição                           |
 | -------------- | ----------------------------------- |
-| Nome da filial | `label` da configuração             |
+| Nome da filial | `name` da configuração              |
 | Status online  | Indicador visual (verde/vermelho)   |
 | IP             | Endereço IP da filial               |
 | Dispositivos   | Lista de dispositivos com controles |
@@ -106,8 +106,9 @@ Cada filial é exibida como um **card** contendo:
 ```json
 {
     "cmd": "set_req",
-    "filial_id": "FIL001",
-    "device_id": "luz_sala",
+    "filial_ip": "10.0.0.1",
+    "filial_port": 51000,
+    "id": "actuator_light_sala",
     "value": 1
 }
 ```
@@ -130,13 +131,14 @@ Cada filial é exibida como um **card** contendo:
 
 A GUI mantém um **histórico local** dos últimos comandos enviados.
 
-| Campo       | Tipo     | Descrição                |
-| ----------- | -------- | ------------------------ |
-| `timestamp` | ISO 8601 | Momento do comando       |
-| `filial_id` | string   | Filial alvo              |
-| `device_id` | string   | Dispositivo alvo         |
-| `value`     | number   | Valor enviado            |
-| `result`    | string   | `OK`, `TIMEOUT`, `ERROR` |
+| Campo         | Tipo     | Descrição                |
+| ------------- | -------- | ------------------------ |
+| `timestamp`   | ISO 8601 | Momento do comando       |
+| `filial_ip`   | string   | IP da filial alvo        |
+| `filial_port` | number   | Porta da filial alvo     |
+| `id`          | string   | Dispositivo alvo         |
+| `value`       | number   | Valor enviado            |
+| `result`      | string   | `OK`, `TIMEOUT`, `ERROR` |
 
 ---
 

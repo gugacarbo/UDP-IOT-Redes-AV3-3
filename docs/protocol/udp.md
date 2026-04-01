@@ -33,7 +33,7 @@ Solicita a lista de dispositivos disponíveis na filial.
 {
   "cmd": "list_req",
   "user": "admin",
-  "pass": "1234"
+  "pass": "admin"
 }
 ```
 
@@ -42,22 +42,7 @@ Solicita a lista de dispositivos disponíveis na filial.
 ```json
 {
   "cmd": "list_resp",
-  "filial_id": "FIL001",
-  "code": "OK",
-  "devices": [
-    {
-      "id": "luz_sala",
-      "label": "Luz da Sala",
-      "type": "light",
-      "role": "sensor_actuator"
-    },
-    {
-      "id": "ar_sala",
-      "label": "Ar-condicionado da Sala",
-      "type": "ac",
-      "role": "sensor_actuator"
-    }
-  ]
+  "id": ["actuator_light_sala", "sensor_light_sala", "actuator_ac_escritorio"]
 }
 ```
 
@@ -73,7 +58,7 @@ Solicita o estado atual de todos os dispositivos da filial.
 {
   "cmd": "get_status",
   "user": "admin",
-  "pass": "1234"
+  "pass": "admin"
 }
 ```
 
@@ -82,44 +67,9 @@ Solicita o estado atual de todos os dispositivos da filial.
 ```json
 {
   "cmd": "get_resp",
-  "filial_id": "FIL001",
-  "code": "OK",
-  "devices": [
-    {
-      "id": "luz_sala",
-      "label": "Luz da Sala",
-      "type": "light",
-      "role": "sensor_actuator",
-      "value": 1,
-      "status": "ok"
-    },
-    {
-      "id": "ar_sala",
-      "label": "Ar-condicionado da Sala",
-      "type": "ac",
-      "role": "sensor_actuator",
-      "value": 720,
-      "status": "ok"
-    }
-  ]
-}
-```
-
-#### Códigos de Erro
-
-| Code         | Descrição             |
-| ------------ | --------------------- |
-| `OK`         | Sucesso               |
-| `AUTH_ERROR` | Falha na autenticação |
-| `ERROR`      | Erro genérico         |
-
-**Resposta de erro:**
-
-```json
-{
-  "cmd": "get_resp",
-  "filial_id": "FIL001",
-  "code": "AUTH_ERROR"
+  "actuator_light_sala": true,
+  "sensor_light_sala": false,
+  "actuator_ac_escritorio": 720
 }
 ```
 
@@ -135,10 +85,9 @@ Define o valor de um atuador na filial.
 {
   "cmd": "set_req",
   "user": "admin",
-  "pass": "1234",
-  "filial_id": "FIL001",
-  "device_id": "luz_sala",
-  "value": 0
+  "pass": "admin",
+  "id": "actuator_light_sala",
+  "value": true
 }
 ```
 
@@ -147,44 +96,41 @@ Define o valor de um atuador na filial.
 ```json
 {
   "cmd": "set_resp",
-  "filial_id": "FIL001",
-  "device_id": "luz_sala",
-  "code": "OK",
-  "value": 0
+  "id": "actuator_light_sala",
+  "value": true
 }
 ```
 
-#### Códigos de Erro
+**Exemplo com Ar-condicionado (0–1023):**
 
-| Code         | Descrição                     |
-| ------------ | ----------------------------- |
-| `OK`         | Comando executado com sucesso |
-| `AUTH_ERROR` | Falha na autenticação         |
-| `NOT_FOUND`  | Dispositivo não encontrado    |
-| `ERROR`      | Erro genérico                 |
-| `TIMEOUT`    | Matriz: filial não respondeu  |
+```json
+{
+  "cmd": "set_req",
+  "user": "admin",
+  "pass": "admin",
+  "id": "actuator_ac_escritorio",
+  "value": 70
+}
+```
 
-**Resposta de erro:**
+**Resposta:**
 
 ```json
 {
   "cmd": "set_resp",
-  "filial_id": "FIL001",
-  "device_id": "luz_sala",
-  "code": "NOT_FOUND"
+  "id": "actuator_ac_escritorio",
+  "value": 70
 }
 ```
-
-> **Nota**: O `TIMEOUT` é gerado pela **Matriz** quando a filial não responde em 800ms.
 
 ---
 
 ## Formato dos Valores
 
-| Tipo     | `type`  | Range      | Unidade         |
-| -------- | ------- | ---------- | --------------- |
-| Luz      | `light` | `0` ou `1` | ON/OFF          |
-| Ar-cond. | `ac`    | `0–1023`   | Intensidade PWM |
+| Tipo     | `type`  | Range          | Unidade         |
+| -------- | ------- | -------------- | --------------- |
+| Luz      | `light` | `true`/`false` | ON/OFF          |
+| Ar-cond. | `ac`    | `0–1023`       | Intensidade PWM |
 
 ---
 
@@ -193,7 +139,7 @@ Define o valor de um atuador na filial.
 | Condição                | Comportamento                          |
 | ----------------------- | -------------------------------------- |
 | JSON malformado         | Ignorado silenciosamente               |
-| `user`/`pass` inválidos | Resposta com `code: AUTH_ERROR`        |
+| `user`/`pass` inválidos | Ignorado silenciosamente               |
 | `cmd` desconhecido      | Ignorado silenciosamente               |
 | Filial sem resposta     | Matriz gera `code: TIMEOUT` após 800ms |
 | 3 ciclos sem resposta   | Filial marcada como `online: false`    |

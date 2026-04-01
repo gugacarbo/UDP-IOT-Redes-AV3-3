@@ -27,8 +27,11 @@ Retorna a configuração Wi-Fi atual.
 
 ```json
 {
+    "mode": "sta",
     "ssid": "MinhaRede",
-    "pass": "senha123"
+    "password": "senha123",
+    "ap_ssid": "Matriz-Setup",
+    "ap_password": "12345678"
 }
 ```
 
@@ -41,7 +44,7 @@ Atualiza a configuração Wi-Fi. Reinicia o ESP32 em modo STA.
 ```json
 {
     "ssid": "NovaRede",
-    "pass": "novaSenha"
+    "password": "novaSenha"
 }
 ```
 
@@ -67,23 +70,14 @@ Lista todas as filiais com seu estado atual.
 ```json
 [
     {
-        "filial_id": "FIL001",
-        "label": "Filial Centro",
+        "name": "Filial Centro",
         "ip": "192.168.1.101",
         "port": 51000,
-        "user": "admin",
-        "pass": "1234",
         "online": true,
-        "devices": [
-            {
-                "id": "luz_sala",
-                "label": "Luz da Sala",
-                "type": "light",
-                "role": "sensor_actuator",
-                "value": 1,
-                "status": "ok"
-            }
-        ]
+        "devices": {
+            "actuator_light_sala": 1,
+            "sensor_light_sala": 1
+        }
     }
 ]
 ```
@@ -96,12 +90,9 @@ Adiciona uma nova filial.
 
 ```json
 {
-    "filial_id": "FIL002",
-    "label": "Filial Norte",
+    "name": "Filial Norte",
     "ip": "192.168.1.102",
-    "port": 51000,
-    "user": "admin",
-    "pass": "5678"
+    "port": 51000
 }
 ```
 
@@ -114,15 +105,6 @@ Adiciona uma nova filial.
 }
 ```
 
-**Response 400 (limite atingido):**
-
-```json
-{
-    "status": "error",
-    "message": "Limite de filiais atingido (max: 10)"
-}
-```
-
 ### `PUT /api/filiais/:id`
 
 Atualiza os dados de uma filial existente.
@@ -131,10 +113,8 @@ Atualiza os dados de uma filial existente.
 
 ```json
 {
-    "label": "Filial Centro - Atualizada",
-    "ip": "192.168.1.201",
-    "user": "admin",
-    "pass": "novaSenha"
+    "name": "Filial Centro - Atualizada",
+    "ip": "192.168.1.201"
 }
 ```
 

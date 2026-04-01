@@ -137,10 +137,10 @@ Cada filial é exibida como um **card** contendo:
 - Lista de dispositivos daquela filial
 
 **Dispositivos dentro do card:**
-| Tipo    | Representação visual         | Controle            |
-| ------- | ---------------------------- | ------------------- |
-| `light` | Ícone de luz + toggle on/off | Botão toggle        |
-| `ac`    | Ícone de AC + slider 0–1023  | Slider com valor    |
+| Tipo    | Representação visual         | Controle         |
+| ------- | ---------------------------- | ---------------- |
+| `light` | Ícone de luz + toggle on/off | Botão toggle     |
+| `ac`    | Ícone de AC + slider 0–1023  | Slider com valor |
 
 **Tratamento de offline:**
 - Filial offline exibe badge "offline" (cor diferenciada)
@@ -152,9 +152,9 @@ Cada filial é exibida como um **card** contendo:
 
 ### 5.1 Parâmetros ajustáveis
 
-| Parâmetro          | Tipo | Padrão | Descrição                             |
-| ------------------ | ---- | ------ | ------------------------------------- |
-| `polling_interval` | int  | 30     | Intervalo de polling em segundos (≥5) |
+| Parâmetro          | Tipo | Padrão | Descrição                                              |
+| ------------------ | ---- | ------ | ------------------------------------------------------ |
+| `polling_interval` | int  | 30000  | Intervalo de polling em milissegundos (≥5000, ≤120000) |
 
 ### 5.2 Armazenamento
 
@@ -197,7 +197,7 @@ interface CommandLog {
   deviceId: string;
   action: 'set';
   value: boolean | number;
-  result: 'ok' | 'TIMEOUT' | 'UNKNOWN_FILIAL' | 'AUTH_FAILED';
+  result: 'ok' | 'TIMEOUT' | 'UNKNOWN_FILIAL';
 }
 ```
 

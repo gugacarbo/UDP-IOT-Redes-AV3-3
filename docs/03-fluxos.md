@@ -56,7 +56,7 @@ sequenceDiagram
     participant M as Matriz
     participant F as Filial
 
-    Note over M: Polling automático 30s (paralelo)
+    Note over M: Polling automático (parallel polling_interval, padrão 30s)
 
     M->>F: get_status (unicast)
     F->>M: get_resp (unicast :51000)
@@ -106,7 +106,7 @@ flowchart TB
 ```mermaid
 flowchart TB
     subgraph Scheduler["UDP Polling Scheduler"]
-        TIMER[Timer 30s]
+        TIMER[Timer (polling_interval)]
         TIMER --> CMD[Envia get_status]
     end
 
