@@ -75,10 +75,10 @@ flowchart TD
 
 ### 4.2 Tipos e Valores
 
-| Tipo       | Acesso          | Luz     | AC    |
-| ---------- | --------------- | ------- | ----- |
-| `sensor`   | Somente leitura | boolean | 0–100 |
-| `actuator` | Somente Escrita | boolean | 0–100 |
+| Tipo       | Acesso          | Luz     | AC     |
+| ---------- | --------------- | ------- | ------ |
+| `sensor`   | Somente leitura | boolean | 0–1023 |
+| `actuator` | Somente Escrita | boolean | 0–1023 |
 
 ## 5. Comandos
 
@@ -137,7 +137,7 @@ Todos os comandos incluem `user` e `pass` em toda requisição.
 }
 ```
 
-**Ar-condicionado (0–100):**
+**Ar-condicionado (0–1023):**
 ```json
 {
   "cmd": "set_req",
@@ -188,7 +188,7 @@ sequenceDiagram
 
 ### 7.2 Controle
 - Ligar/desligar luzes
-- Ajustar intensidade do ar-condicionado (0–100)
+- Ajustar intensidade do ar-condicionado (0–1023)
 - Feedback visual após alteração
 
 ### 7.3 Gerenciamento

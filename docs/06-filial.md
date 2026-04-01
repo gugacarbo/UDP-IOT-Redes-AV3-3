@@ -70,14 +70,15 @@ struct DeviceConfig {
 
 **Validações obrigatórias ao carregar:**
 - `port`: inteiro `1–65535`
-- `admin_user` e `admin_pass`: string não vazia (usadas para validar `user`/`pass` recebidos via UDP)
-- `devices`: array de objetos com `id` (não vazio) e `pin` (GPIO válido)
+- `admin_user` e `admin_pass`: string não vazia, máximo 32 caracteres cada (usadas para validar `user`/`pass` recebidos via UDP)
+- `devices`: array de objetos com `id` (não vazio, máximo 64 caracteres) e `pin` (GPIO válido)
 - `devices`: campo `id` deve ser único no array
+- **GPIO inválido** (ex: GPIO 6-11): dispositivo ignorado, log de warning, boot continua
 
 ### 2.3 Fallback de configuração
 
 Quando `config_filial.json` não existir ou estiver inválido:
-1. `port=51000`, `admin_user="admin"`, `admin_pass="1234"`
+1. `port=51000`, `admin_user="admin"`, `admin_pass="admin"`
 2. `devices` como array vazio
 3. Expor API REST para provisioning
 4. Persistir após primeiro `PUT /api/config` válido
@@ -126,7 +127,7 @@ Todos os comandos recebidos pela Filial devem conter:
 
 - Todo comando UDP deve incluir `user` e `pass`
 - Credenciais são validadas contra `admin_user` e `admin_pass` em `config_filial.json`
-- Falha de autenticação → resposta ignorada silenciosamente
+- Falha de autenticação → resposta ignorada silenciosamente (por segurança, não revela que o servidor existe)
 - Timeout de autenticação: nenhum (validação síncrona no parse)
 
 ### 4.3 Tabela de comandos
@@ -216,6 +217,7 @@ Todos os comandos recebidos pela Filial devem conter:
 - A Matriz escuta respostas na porta **51000** (fixa)
 - UDP malformado (JSON inválido) é **ignorado silenciosamente**
 - A Filial deve estar preparada para receber múltiplos comandos em sequência rápida (polling paralelo da Matriz)
+- **Múltiplos `set_req` simultâneos** para o mesmo dispositivo: último comando recebido prevalece (processamento FIFO síncrono no loop UDP)
 
 ## 5. Dispositivos
 
@@ -235,19 +237,19 @@ Todos os comandos recebidos pela Filial devem conter:
 
 ### 5.2 Tipos e valores
 
-| Tipo       | Acesso          | Luz     | AC    |
-| ---------- | --------------- | ------- | ----- |
-| `sensor`   | Somente leitura | boolean | 0–100 |
-| `actuator` | Somente escrita | boolean | 0–100 |
+| Tipo       | Acesso          | Luz     | AC      |
+| ---------- | --------------- | ------- | ------- |
+| `sensor`   | Somente leitura | boolean | 0–1023  |
+| `actuator` | Somente escrita | boolean | 0–1023  |
 
 ### 5.3 GPIO
 
-| Tipo de dispositivo | GPIO                    |
-| ------------------- | ----------------------- |
-| `sensor_light`      | GPIO digital (HIGH/LOW) |
-| `actuator_light`    | GPIO digital (HIGH/LOW) |
-| `sensor_ac`         | GPIO ADC (0–100)        |
-| `actuator_ac`       | GPIO PWM (0–100)        |
+| Tipo de dispositivo | GPIO                      |
+| ------------------- | ------------------------- |
+| `sensor_light`      | GPIO digital (HIGH/LOW)   |
+| `actuator_light`    | GPIO digital (HIGH/LOW)   |
+| `sensor_ac`         | GPIO ADC (0–1023, 10 bits)|
+| `actuator_ac`       | GPIO PWM (0–1023, 10 bits)|
 
 ### 5.4 Mapeamento recomendado de hardware (ESP32 DevKit)
 
@@ -259,12 +261,16 @@ Todos os comandos recebidos pela Filial devem conter:
 
 **ADC para `sensor_ac` (ADC1):**
 - Preferir `GPIO 32, 33, 34, 35, 36, 39`
-- Converter leitura para faixa `0–100`
+- Leitura direta em range `0–1023` (resolução de 10 bits)
 
 **PWM para `actuator_ac` (LEDC):**
 - Frequência padrão: `5000 Hz`
-- Resolução padrão: `8 bits`
-- Conversão `0–100` para duty cycle `0–255`
+- Resolução padrão: `10 bits`
+- Range de valores `0–1023` (0=desligado, 1023=máximo)
+
+**Estado inicial dos atuadores:**
+- Após reboot/power-on, todos os atuadores iniciam no estado desligado/zero (`actuator_light` = `false`, `actuator_ac` = `0`)
+- Estado dos atuadores é **volátil** — não persiste após reinicialização (por segurança)
 
 ### 5.5 Classe base (Device)
 
@@ -329,7 +335,7 @@ public:
 - `getStatus` — preenche JSON object com `id → valor` lido de cada dispositivo
 - `setValue` — localiza atuador por `id` e chama `write()`
 - Dispositivos não encontrados em `setValue` → comando ignorado silenciosamente
-- `actuator_ac_*` com `value` fora de `0–100` → aplicar clamp automático antes do `write()`
+- `actuator_ac_*` com `value` fora de `0–1023` → aplicar clamp automático antes do `write()`
 - `actuator_light_*` aceita `value` booleano e também `0/1` numérico
 - Valor inválido em `set_req` → comando ignorado silenciosamente
 

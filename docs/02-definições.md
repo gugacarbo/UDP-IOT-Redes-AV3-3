@@ -20,7 +20,7 @@ Ema empresa com várias filiais espalhadas pela cidade está gastando muito dinh
 **1.2.1 Matriz**
 
 - Um ESP32 rodando na matriz da empresa
-- Serve um site (dashboard) para os Usuárioes
+- Serve um site (dashboard) para os Usuários
 - Manda comandos para todas as filiais via WiFi
 - Recebe os dados de todas as filiais em tempo real
 
@@ -53,7 +53,7 @@ Ema empresa com várias filiais espalhadas pela cidade está gastando muito dinh
 #### 2.1.1 Matriz
 
 - Gerencia todas as filiais remotamente
-- Serve o dashboard web para os Usuárioes
+- Serve o dashboard web para os Usuários
 - Envia comandos via rede WiFi
 - Recebe atualizações em tempo real
 
@@ -313,7 +313,7 @@ Todas as mensagens UDP seguem o formato JSON e incluem autenticação. O campo `
 {
   "cmd": "nome_do_comando",
   "user": "admin",
-  "pass": "1234",
+  "pass": "admin",
   ...outros campos...
 }
 ```
@@ -340,7 +340,7 @@ graph LR
 {
   "cmd": "list_req",
   "user": "admin",
-  "pass": "1234"
+  "pass": "admin"
 }
 ```
 
@@ -377,7 +377,7 @@ graph LR
 {
   "cmd": "get_status",
   "user": "admin",
-  "pass": "1234"
+  "pass": "admin"
 }
 ```
 
@@ -395,8 +395,8 @@ graph LR
 **Lendo a resposta:**
 - `true` = luz está **ligada** 💡
 - `false` = luz está **desligada**
-- `72` = intensidade do ar-condicionado em porcentagem (0-100) ❄️
-- `45` = leitura do sensor de ar em porcentagem (0-100) 📊
+- `72` = intensidade do ar-condicionado (0-1023) ❄️
+- `45` = leitura do sensor de ar (0-1023) 📊
 
 #### SET (Alterar Estado)
 
@@ -422,7 +422,7 @@ graph TD
 {
   "cmd": "set_req",
   "user": "admin",
-  "pass": "1234",
+  "pass": "admin",
   "id": "actuator_light_sala",
   "value": true
 }
@@ -433,7 +433,7 @@ graph TD
 {
   "cmd": "set_req",
   "user": "admin",
-  "pass": "1234",
+  "pass": "admin",
   "id": "actuator_ac_escritorio",
   "value": 70
 }
@@ -469,7 +469,7 @@ Cada dispositivo tem um ID único no formato:
 - `actuator_*` = Pode **escrever** via `set_req` (controle)
 - `sensor_*` = Pode apenas **ler** (monitorar)
 - Estados de `sensor_*` e `actuator_*` são observados via `get_status`
-- Valores de AC são sempre representados em porcentagem na API e na GUI
+- Valores de AC são sempre representados no range 0-1023 (resolução ADC/PWM de 10 bits) na API e na GUI
 
 ### 3.4 Tipos de Dispositivos e Valores
 
@@ -482,8 +482,8 @@ graph TB
         end
 
         subgraph AC["❄️ AC (Ar-Condicionado)"]
-            AS["sensor_ac_*<br/>📖 READ ONLY<br/>Valor: 0-100<br/>ADC normalizado<br/>analogRead()"]
-            AA["actuator_ac_*<br/>📝 WRITE ONLY (set_req)<br/>📊 Leitura via get_status<br/>Valor: 0-100<br/>PWM normalizado<br/>analogWrite()"]
+            AS["sensor_ac_*<br/>📖 READ ONLY<br/>Valor: 0-1023<br/>ADC 10 bits<br/>analogRead()"]
+            AA["actuator_ac_*<br/>📝 WRITE ONLY (set_req)<br/>📊 Leitura via get_status<br/>Valor: 0-1023<br/>PWM 10 bits<br/>analogWrite()"]
         end
     end
 
@@ -500,15 +500,15 @@ graph TB
   - `actuator_light_*`: Booleano (`true` = ligar, `false` = desligar)
 
 - **AC (Ar-Condicionado):**
-  - `sensor_ac_*`: Inteiro 0–100 (porcentagem da leitura do sensor)
-  - `actuator_ac_*`: Inteiro 0–100 (intensidade do ar: 0=desligado, 100=máximo)
+  - `sensor_ac_*`: Inteiro 0–1023 (resolução ADC de 10 bits)
+  - `actuator_ac_*`: Inteiro 0–1023 (intensidade PWM: 0=desligado, 1023=máximo)
 
 ## 4. Arquitetura Interna da Matriz
 
 ### 4.1 Funcionamento
 
 - Gerenciar múltiplas filiais simultaneamente
-- Servir o site (dashboard) para os Usuárioes
+- Servir o site (dashboard) para os Usuários
 - Fazer a ponte entre WebSocket e UDP
 - Armazenar configurações
 
@@ -987,7 +987,7 @@ graph TB
 {
   "port": 51000,
   "admin_user": "admin",
-  "admin_pass": "1234",
+  "admin_pass": "admin",
   "devices": [
     {
       "id": "actuator_light_sala",

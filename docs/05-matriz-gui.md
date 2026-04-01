@@ -50,7 +50,7 @@ A GUI envia `set_req` via WebSocket. Validações obrigatórias:
 | `filial_ip:port`   | Deve corresponder a filial cadastrada              |
 | `id`               | Não vazio, prefixo `actuator_` (sensor_ rejeitado) |
 | `actuator_light_*` | `value` booleano                                   |
-| `actuator_ac_*`    | `value` inteiro `0–100`                            |
+| `actuator_ac_*`    | `value` inteiro `0–1023`                           |
 
 **Injeção de credenciais:** a bridge injeta `user` e `pass` do `config_matriz.json` automaticamente.
 
@@ -119,12 +119,15 @@ Falha:
 
 - `set_resp` confirmado vence temporariamente até o próximo `status_update`
 
+> **⚠️ Distinção UDP vs WebSocket:** Os campos `ok` e `code` em `set_resp` são adicionados pela **bridge da Matriz** ao repassar para a GUI via WebSocket. O protocolo UDP base (Filial→Matriz) retorna apenas `cmd`, `id` e `value`.
+
 ### 3.4 Robustez
 
 - `ping`/`pong` WebSocket a cada 15s (camada WS)
 - Timeout de 30s sem `pong` → conexão encerrada
 - Timeout UDP de 800ms (camada de rede) — independente do ping/pong WS
 - Fila máxima de 20 mensagens por cliente; ao exceder, a conexão é encerrada
+- **MAX_WS_CLIENTS = 4**: Limite de clientes WebSocket simultâneos (restrição de RAM do ESP32). Novas conexões após o limite são rejeitadas com HTTP 503.
 
 ## 4. Visualização de dispositivos
 
@@ -134,10 +137,10 @@ Cada filial é exibida como um **card** contendo:
 - Lista de dispositivos daquela filial
 
 **Dispositivos dentro do card:**
-| Tipo    | Representação visual         | Controle         |
-| ------- | ---------------------------- | ---------------- |
-| `light` | Ícone de luz + toggle on/off | Botão toggle     |
-| `ac`    | Ícone de AC + slider 0–100   | Slider com valor |
+| Tipo    | Representação visual         | Controle            |
+| ------- | ---------------------------- | ------------------- |
+| `light` | Ícone de luz + toggle on/off | Botão toggle        |
+| `ac`    | Ícone de AC + slider 0–1023  | Slider com valor    |
 
 **Tratamento de offline:**
 - Filial offline exibe badge "offline" (cor diferenciada)
@@ -166,7 +169,7 @@ Cada filial é exibida como um **card** contendo:
 
 ### 6.2 Controle
 - Ligar/desligar luzes (toggle)
-- Ajustar intensidade do ar-condicionado (slider 0–100)
+- Ajustar intensidade do ar-condicionado (slider 0–1023)
 - Feedback visual após alteração (animação de confirmação)
 
 ### 6.3 Gerenciamento

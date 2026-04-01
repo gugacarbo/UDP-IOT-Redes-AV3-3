@@ -1,11 +1,13 @@
 ---
-title: Arquitetura do Sistema
+title: Arquitetura do Sistema — Visão Geral
 description: Visão geral da arquitetura do sistema de monitoramento IoT por UDP e WebSocket
 ---
 
-## Arquitetura do sistema
+# Arquitetura do Sistema
 
-## Visão geral
+## Visão Geral
+
+O sistema é composto por três camadas principais: **GUI React** (navegador), **Matriz ESP32** (hub centralizador) e **Filiais ESP32** (dispositivos locais).
 
 ```mermaid
 flowchart TB
@@ -46,7 +48,9 @@ flowchart TB
     LFS_MATRIZ -.-> BRIDGE
 ```
 
-## Fluxo de dados
+## Fluxo de Dados
+
+O diagrama abaixo mostra a interação completa entre usuário, GUI, WebSocket, Matriz e Filiais:
 
 ```mermaid
 sequenceDiagram
@@ -74,58 +78,24 @@ sequenceDiagram
     Note over M,F: Timeout 800ms → set_resp com code: TIMEOUT
 ```
 
-## Arquitetura da filial
+## Entidades do Sistema
 
-```mermaid
-flowchart TB
-    UDP[UDPServer<br/>porta 51000] --> PARSE[Parse JSON]
-    PARSE --> AUTH[Valida<br/>user/pass]
-    AUTH --> DISPATCH[Command<br/>Dispatcher]
+| Entidade   | Papel     | Responsabilidade                                    |
+| ---------- | --------- | --------------------------------------------------- |
+| **Matriz** | Cliente   | Gerencia e controla filiais, serve GUI via HTTP/WS  |
+| **Filial** | Servidor  | Expõe dispositivos via UDP, serve portal local HTTP |
+| **GUI**    | Dashboard | Interface React para monitoramento e controle       |
 
-    DISPATCH -->|list_req| LIST[handleList]
-    DISPATCH -->|get_status| STATUS[handleGetStatus]
-    DISPATCH -->|set_req| SET[handleSet]
+## Protocolos
 
-    LIST --> DM[DeviceManager]
-    STATUS --> DM
-    SET --> DM
+| Protocolo | Uso                        | Porta | Direção             |
+| --------- | -------------------------- | ----- | ------------------- |
+| UDP       | Comandos e respostas IoT   | 51000 | Matriz ↔ Filial     |
+| WebSocket | Atualizações em tempo real | 80    | Matriz ↔ Navegador  |
+| HTTP REST | Configuração e CRUD        | 80    | Matriz/Filial ↔ Nav |
 
-    DM --> SENS[Sensor]
-    DM --> ACT[Actuator]
-
-    SENS -->|light| GPIO_D[GPIO digital<br/>HIGH/LOW]
-    SENS -->|ac| GPIO_A[GPIO ADC<br/>0-1023]
-    ACT -->|light| GPIO_D
-    ACT -->|ac| GPIO_PWM[GPIO PWM<br/>0-1023]
-
-    DM -.->|config| LFS[LittleFS<br/>config_filial.json]
-```
-
-## Arquitetura da matriz
-
-```mermaid
-flowchart TB
-    subgraph Scheduler["UDP Polling Scheduler"]
-        TIMER[Timer 30s]
-        TIMER --> CMD[Envia get_status]
-    end
-
-    subgraph Receiver["UDP Response Receiver"]
-        UDP_R[porta 51000] --> NORM[Normaliza<br/>payload]
-        NORM --> BRIDGE[WebSocket<br/>Bridge]
-    end
-
-    subgraph WS_SRV["WebSocket Server"]
-        WS[AsyncWebSocket<br/>:80]
-    end
-
-    subgraph Storage["LittleFS"]
-        CONFIG[config_matriz.json]
-    end
-
-    CMD -->|unicast| FILIAL[Filial]
-    FILIAL -->|get_resp| UDP_R
-    BRIDGE --> WS
-    WS -->|broadcast| GUI[GUI Clients]
-    CONFIG -.->|credenciais| CMD
-```
+> Veja detalhes em:
+> - [Arquitetura da Matriz](matriz.md)
+> - [Arquitetura da Filial](filial.md)
+> - [Protocolo UDP](../protocol/udp.md)
+> - [Protocolo WebSocket](../protocol/websocket.md)

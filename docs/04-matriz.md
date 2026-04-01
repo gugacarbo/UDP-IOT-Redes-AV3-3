@@ -78,7 +78,7 @@ struct FilialState {
 
 **Validações obrigatórias ao carregar:**
 - `user` e `pass`: string não vazia
-- `polling_interval`: inteiro `>= 5` e `<= 120`
+- `polling_interval`: inteiro `>= 5` e `<= 120` (valores fora do range são automaticamente ajustados para o limite mais próximo, com log de warning)
 - `discovery_every_cycles`: inteiro `>= 1`
 - `filiais`: array de objetos com `name`, `ip`, `port` válidos
 - `filiais`: chave composta `ip:port` deve ser única
@@ -207,12 +207,21 @@ Todos os comandos enviados pela Matriz para a Filial devem conter:
 }
 ```
 
+> **⚠️ Importante:** O protocolo UDP base (Filial↔Matriz) retorna apenas `cmd`, `id` e `value`. Os campos `ok` e `code` são adicionados pela **Matriz** ao repassar a mensagem para a GUI via WebSocket (ver doc 05-matriz-gui.md).
+
 ### 4.4 Timeout, retry e porta local
 
 - **Timeout** por comando: **800 ms** (list_req, get_status, set_req)
 - **Retry**: não realizar reenvio automático
-- **Porta local**: **51000** (fixa)
-- **Correlação**: IP:porta de origem → chave `ip:port` do FilialConfig
+- **Porta local**: **51000** (fixa) — a Matriz **escuta** respostas UDP nesta porta
+- **Correlação**: IP:porta de origem da resposta → chave `ip:port` do FilialConfig
+- **Envio**: A Matriz **envia** comandos de qualquer porta efêmera para o `ip:port` da Filial
+
+> **Resumo UDP:**
+> - Matriz envia comandos para `filial_ip:filial_port`
+> - Matriz escuta respostas em `matriz_ip:51000` (fixa)
+> - Filial escuta comandos na porta configurada (padrão 51000)
+> - Filial responde para o IP:porta de **origem** do comando recebido
 
 **Contagem de ciclos perdidos (missedCycles):**
 - Apenas timeout de `get_status` incrementa `missedCycles`
@@ -298,7 +307,7 @@ Este documento (04) concentra-se nos dados, polling UDP, detecção de offline, 
 | `PUT`    | `/api/filiais/:id` | Atualiza filial              |
 | `DELETE` | `/api/filiais/:id` | Remove filial                |
 
-**`:id` de filial:** formato `ip:porta` (ex: `192.168.1.100:51000`)
+**`:id` de filial:** formato `ip:porta` (ex: `192.168.1.100:51000`), deve ser URL-encoded na rota (ex: `192.168.1.100%3A51000`)
 
 ### 8.2 Detalhamento
 
@@ -346,13 +355,15 @@ Aplica imediatamente: `polling_interval` no próximo ciclo; `discovery_every_cyc
 }
 ```
 
+**`lastSeen`:** Unix timestamp em **segundos** UTC (tempo da última resposta UDP recebida)
+
 #### `POST /api/filiais`
 Cria uma nova filial.
 
 **Request:** `{ "name": "...", "ip": "...", "port": 51000 }`
 
 **Validações:**
-- `name`: string não vazia
+- `name`: string não vazia, máximo 32 caracteres
 - `ip`: IPv4 válido
 - `port`: inteiro 1–65535
 - `ip:port` não pode existir em outra filial

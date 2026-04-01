@@ -51,7 +51,7 @@ npx shadcn@latest add card button toggle slider badge input dialog scroll-area
 | `Card`       | Card de filial                        |
 | `Button`     | Controles de dispositivos             |
 | `Toggle`     | Liga/desliga luzes                    |
-| `Slider`     | Controle de AC (0-100)                |
+| `Slider`     | Controle de AC (0-1023)               |
 | `Badge`      | Indicador offline                     |
 | `Input`      | Input de IP manual                    |
 | `Dialog`     | Modal de histórico / adição de filial |
@@ -72,13 +72,14 @@ matriz-gui/src/
 
 ## WebSocket
 
-| Item          | Valor                           |
-| ------------- | ------------------------------- |
-| Endpoint      | `ws://<ip_matriz>:80`           |
-| Multi-cliente | Broadcast para todas as abas    |
-| Eventos       | `status_update`, `set_resp`     |
-| Heartbeat     | `ping` / `pong`                 |
-| Reconexão     | Backoff exponencial de 1s a 30s |
+| Item          | Valor                                                    |
+| ------------- | -------------------------------------------------------- |
+| Endpoint      | `ws://<ip_matriz>:80`                                    |
+| Multi-cliente | Broadcast para todas as abas                             |
+| Eventos       | `status_update`, `set_resp`                              |
+| Heartbeat     | `ping` / `pong`                                          |
+| Reconexão     | Backoff exponencial de 1s a 30s, tentativas infinitas    |
+| Indicador     | Banner visual "Reconectando..." durante perda de conexão |
 
 `set_resp` é a confirmação de controle recebida após um `set_req` via UDP.
 `status_update` é o broadcast de estado enviado para manter todas as abas sincronizadas.
@@ -109,6 +110,7 @@ Ele é recarregado no boot para manter o estado entre reinicializações.
   "user": "admin",
   "pass": "admin",
   "polling_interval": 30,
+  "discovery_every_cycles": 10,
   "filiais": [
     { "name": "Filial Centro", "ip": "192.168.1.100", "port": 51000 },
     { "name": "Filial Norte", "ip": "192.168.1.101", "port": 51000 }
@@ -117,6 +119,7 @@ Ele é recarregado no boot para manter o estado entre reinicializações.
 ```
 
 `polling_interval` é inteiro em segundos, com mínimo `5` e padrão `30`.
+`discovery_every_cycles` define a cada quantos ciclos de polling a matriz executa redescoberta (padrão `10`, mínimo `1`).
 
 ## Configuração da filial
 
@@ -127,11 +130,11 @@ Ele é recarregado no boot para manter o estado entre reinicializações.
   "port": 51000,
   "admin_user": "admin",
   "admin_pass": "admin",
-  "id": [
-    "actuator_light_sala",
-    "sensor_light_sala",
-    "actuator_ac_escritorio",
-    "sensor_ac_escritorio"
+  "devices": [
+    { "id": "actuator_light_sala", "pin": 2 },
+    { "id": "sensor_light_sala", "pin": 34 },
+    { "id": "actuator_ac_escritorio", "pin": 4 },
+    { "id": "sensor_ac_escritorio", "pin": 35 }
   ]
 }
 ```
@@ -172,8 +175,14 @@ está ausente ou corrompido. Implementado pelo módulo `CaptivePortal` na Matriz
 3. Captive portal detecta e redireciona para página de setup
 4. Usuário preenche SSID/senha e envia via POST /api/wifi
 5. Matriz salva config_wifi.json e reinicia
-6. Próximo boot: conecta na rede STA + mantém AP
+6. Próximo boot: conecta na rede STA + mantém AP ativo
 ```
+
+**Após conexão Station bem-sucedida:**
+- Modo STA+AP permanece ativo
+- AP continua com SSID "ESP32-MATRIZ" para recovery/reconfiguração
+- Portal serve página de status + permite reconfiguração WiFi
+- GUI principal permanece acessível via STA (mDNS ou IP)
 
 ## Build e deploy
 
@@ -183,7 +192,7 @@ gui:
 
 build:
   cp -r matriz-gui/dist/* matriz-esp32/data/
-  cp -r matriz-gui/dist/* filial-esp32/data/
+  cp -r matriz-gui/dist/* filial-esp32/data/  # Filial usa mesma GUI React da Matriz
 
 uploadfs-matriz:
   cd matriz-esp32 && pio run --target buildfs
@@ -209,6 +218,9 @@ uploadfs-filial:
 | -------------- | ----------------------------------------- |
 | Baud rate      | 115200                                    |
 | Logs           | WiFi, UDP, JSON e estado dos dispositivos |
+| Formato        | `[LEVEL] [MODULE] message`                |
+| Níveis         | DEBUG, INFO, WARN, ERROR                  |
+| Produção       | Compilação condicional via `#ifdef DEBUG` |
 | Cenário mínimo | 1 matriz + 2 filiais                      |
 
 ## Definition of Done

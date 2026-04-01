@@ -35,7 +35,7 @@ Obtenção da lista de pontos de monitoramento/controle na filial:
 - Cliente envia:
 
 ```json
-{ "cmd":"list_req", }
+{ "cmd":"list_req" }
 ```
 
 - Servidor responde:
@@ -43,7 +43,7 @@ Obtenção da lista de pontos de monitoramento/controle na filial:
 ```json
 {
  "cmd":"list_resp",
- "id":"[sensor_actuator_vector]",
+ "id":["sensor_light_sala", "actuator_light_sala", "sensor_ac_escritorio", "actuator_ac_escritorio"]
 }
 ```
 
@@ -58,7 +58,7 @@ Obtenção do estado atual dos sensores e atuadores da filial:
 - Cliente envia:
 
 ```json
-{ "cmd":"get_status", }
+{ "cmd":"get_status" }
 ```
 
 - Servidor responde:
@@ -77,8 +77,8 @@ No contexto desta aplicação haverão as seguintes combinações de tipo/dispos
 
 - sensor_light – obtém o estado atual do interruptor de luz (boolean);
 - actuator_light – altera o estado do interrupto de luz (boolean);
-- sensor_ac – obtém o estado atual do motor do ar condicionado (analógico 0-100);
-- actuator_ac – altera o estado atual do motor do ar condicionado (analógico 0-100);
+- sensor_ac – obtém o estado atual do motor do ar condicionado (analógico 0-1023);
+- actuator_ac – altera o estado atual do motor do ar condicionado (analógico 0-1023);
 
 ## Alteração de Estado
 
