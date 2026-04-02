@@ -1,2 +1,6 @@
 packages:
-  - 'matriz-gui'
+  - "matriz-gui"
+  - "filial-gui"
+  - "docs"
+  - "matriz-esp32"
+  - "filial-esp32"
