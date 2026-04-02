@@ -7,8 +7,9 @@
 	],
 	"scripts": {
 		"biome:fix": "biome check --write",
-		"build:docs": "pnpm run --filter website build",
-		"build:gui": "pnpm run --filter @udp-iot/matriz-gui build",
+		"build:docs": "cd docs && pnpm run build",
+		"build:gui": "cd matriz-gui && pnpm run build",
+		"build:filial-gui": "cd filial-gui && pnpm run build",
 		"build:matriz": "cd matriz-esp32 && pio run",
 		"build:filial": "cd filial-esp32 && pio run",
 		"build:all": "pnpm run build:docs & pnpm run build:gui & pnpm run build:matriz & pnpm run build:filial &",
