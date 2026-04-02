@@ -1,0 +1,374 @@
+{
+    "project": "UDP IoT Monitor",
+    "branchName": "ralph/docs-refactor",
+    "description": "Refatoração da documentação Docusaurus: eliminar 19+ duplicações, corrigir 8 inconsistências terminológicas, enriquecer arquivos canônicos com links e seções 'Veja Também'.",
+    "userStories": [
+        {
+            "id": "US-001",
+            "title": "Padronizar nome das GUIs",
+            "description": "Como leitor da documentação, quero encontrar os mesmos nomes para as interfaces gráficas em todos os arquivos, para não confundir 'Interface local' com 'Portal Local' etc.",
+            "acceptanceCriteria": [
+                "Substituir 'Interface local' por 'Portal Local da Filial' onde aparecer referindo-se ao portal servido pelo ESP32 em intro.md e definicoes.md",
+                "'definicoes.md' usa 'GUI da Matriz' e 'Portal Local da Filial' corretamente",
+                "'intro.md' menciona ambas as interfaces com os nomes padronizados",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 1,
+            "group": "A",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-002",
+            "title": "Padronizar justificativa de autenticação UDP",
+            "description": "Como leitor da documentação, quero que a justificativa para ignorar comandos não autenticados seja consistente em todos os arquivos, para entender o comportamento de segurança.",
+            "acceptanceCriteria": [
+                "Todos os arquivos que mencionam autenticação UDP (filial.md, protocol/udp.md, firmware/filial/overview.md) usam a justificativa '(por segurança)'",
+                "Remover menções a 'ignorado silenciosamente' sem contexto de segurança",
+                "A justificativa aparece tanto na descrição do comportamento quanto nos exemplos de fluxo",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 2,
+            "group": "A",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-003",
+            "title": "Esclarecer porta UDP entre Matriz e Filial",
+            "description": "Como leitor da documentação, quero saber explicitamente se Matriz e Filial podem usar portas UDP diferentes, para configurar corretamente.",
+            "acceptanceCriteria": [
+                "'protocol/udp.md' afirma explicitamente: 'Ambas devem usar a mesma porta (padrão 51000)'",
+                "'infrastructure/network.md' reforça a mesma informação na seção de portas",
+                "Não há menção ambígua que sugira portas diferentes",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 3,
+            "group": "A",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-004",
+            "title": "Documentar diferença de SSID no Captive Portal",
+            "description": "Como leitor da documentação, quero entender por que o SSID do captive portal é diferente entre Matriz e Filial, para identificar corretamente cada dispositivo em modo AP.",
+            "acceptanceCriteria": [
+                "'infrastructure/wifi.md' documenta explicitamente: Matriz usa 'Matriz-Setup', Filial usa 'ESP32-<ip>-Setup'",
+                "Explica o motivo da diferença (Matriz é única e conhecida; Filial precisa do IP para desambiguar)",
+                "A diferença aparece na tabela de configuração ou em seção dedicada",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 4,
+            "group": "A",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-005",
+            "title": "Padronizar terminologia de valores AC",
+            "description": "Como leitor da documentação, quero encontrar 'duty cycle PWM (0-1023)' de forma consistente, para não confundir com 'intensidade de refrigeração' ou outras descrições vagas.",
+            "acceptanceCriteria": [
+                "Todas as ocorrências de 'intensidade de refrigeração', 'PWM duty cycle' sem faixa, ou descrições vagas são substituídas por 'duty cycle PWM (0-1023)' em requisitos.md, protocol/udp.md, firmware/filial/overview.md",
+                "A faixa 0-1023 aparece junto ao termo em todas as menções",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 5,
+            "group": "A",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-006",
+            "title": "Esclarecer comportamento do polling",
+            "description": "Como leitor da documentação, quero saber se o polling é sequencial ou em paralelo, para entender o desempenho do sistema.",
+            "acceptanceCriteria": [
+                "'firmware/matriz/overview.md' afirma: 'Polling sequencial por filial, executado via task dedicada'",
+                "'matriz.md' não contém descrição conflitante (em paralelo) — ou foi substituída por link",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 6,
+            "group": "A",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-007",
+            "title": "Padronizar prioridades FreeRTOS com valores numéricos",
+            "description": "Como leitor da documentação, quero encontrar prioridades FreeRTOS sempre com valores numéricos, para comparar prioridades entre tasks sem ambiguidade.",
+            "acceptanceCriteria": [
+                "Todas as menções a prioridades FreeRTOS em firmware/matriz/overview.md, firmware/filial/overview.md, architecture/matriz.md, architecture/filial.md incluem valores numéricos (ex: 'Alta (2)', 'Média (1)')",
+                "Não há menções a prioridades apenas por nome sem número",
+                "Os valores são consistentes entre Matriz e Filial",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 7,
+            "group": "A",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-008",
+            "title": "Adicionar limite WebSocket em protocol doc",
+            "description": "Como leitor da documentação, quero encontrar o limite de clientes WebSocket (MAX_WS_CLIENTS = 4) no documento de protocolo, não apenas na documentação da GUI.",
+            "acceptanceCriteria": [
+                "'protocol/websocket.md' inclui o limite MAX_WS_CLIENTS = 4",
+                "O limite aparece na seção de visão geral ou em uma nota dedicada",
+                "Explica brevemente o que acontece quando o limite é atingido (conexão mais antiga é fechada)",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 8,
+            "group": "A",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-009",
+            "title": "Remover duplicação — Arquitetura geral (Dup #1, #19)",
+            "description": "Como mantenedor da documentação, quero que a visão geral da arquitetura exista em um único lugar, para evitar divergências quando atualizar diagramas. Arquivo canônico: architecture/overview.md.",
+            "acceptanceCriteria": [
+                "'definicoes.md' não contém diagrama de arquitetura duplicado — em seu lugar há um parágrafo introdutório + link para 'architecture/overview.md'",
+                "'fluxos.md' não contém diagrama de arquitetura duplicado — em seu lugar há um link para 'architecture/overview.md'",
+                "'intro.md' mantém resumo breve de componentes e adiciona link para 'architecture/overview.md'",
+                "'architecture/overview.md' permanece intacto como fonte canônica",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 9,
+            "group": "B",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-010",
+            "title": "Remover duplicação — Protocolo UDP (Dup #4)",
+            "description": "Como mantenedor da documentação, quero que a especificação de comandos UDP exista em um único lugar, para evitar descrições conflitantes de payloads. Arquivo canônico: protocol/udp.md.",
+            "acceptanceCriteria": [
+                "'requisitos.md' §5 não contém especificação detalhada de comandos/payloads — em seu lugar há link para 'protocol/udp.md'",
+                "'protocol/udp.md' permanece intacto como fonte canônico",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 10,
+            "group": "B",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-011",
+            "title": "Remover duplicação — Protocolo WebSocket (Dup #5)",
+            "description": "Como mantenedor da documentação, quero que a especificação de mensagens WebSocket exista em um único lugar. Arquivo canônico: protocol/websocket.md.",
+            "acceptanceCriteria": [
+                "'matriz-gui.md' §3 não contém especificação detalhada de mensagens WebSocket — em seu lugar há link para 'protocol/websocket.md'",
+                "'protocol/websocket.md' permanece intacto como fonte canônico",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 11,
+            "group": "B",
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-012",
+            "title": "Remover duplicação — Configuração WiFi (Dup #6)",
+            "description": "Como mantenedor da documentação, quero que a descrição de config_wifi.json exista em um único lugar. Arquivo canônico: infrastructure/config.md.",
+            "acceptanceCriteria": [
+                "'config-build.md' não contém tabela/campos de config_wifi.json — em seu lugar há link para 'infrastructure/config.md'",
+                "'firmware/matriz/overview.md' não repete campos de config_wifi.json — em seu lugar há link",
+                "'firmware/filial/overview.md' não repete campos de config_wifi.json — em seu lugar há link",
+                "'infrastructure/config.md' permanece intacto como fonte canônico",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 12,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca firmware/matriz/overview.md e firmware/filial/overview.md — pode conflitar com US-013, US-014, US-016, US-017, US-018, US-019 se executadas em paralelo"
+        },
+        {
+            "id": "US-013",
+            "title": "Remover duplicação — Configuração da Matriz (Dup #7)",
+            "description": "Como mantenedor da documentação, quero que a descrição de config_matriz.json exista em um único lugar. Arquivo canônico: infrastructure/config.md.",
+            "acceptanceCriteria": [
+                "'matriz.md' não repete campos de config_matriz.json — em seu lugar há link para 'infrastructure/config.md'",
+                "'firmware/matriz/overview.md' não repete campos de config_matriz.json — em seu lugar há link",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 13,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca firmware/matriz/overview.md — pode conflitar com US-012 e US-016"
+        },
+        {
+            "id": "US-014",
+            "title": "Remover duplicação — Configuração da Filial (Dup #8)",
+            "description": "Como mantenedor da documentação, quero que a descrição de config_filial.json exista em um único lugar. Arquivo canônico: infrastructure/config.md.",
+            "acceptanceCriteria": [
+                "'filial.md' não repete campos de config_filial.json — em seu lugar há link para 'infrastructure/config.md'",
+                "'firmware/filial/overview.md' não repete campos de config_filial.json — em seu lugar há link",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 14,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca firmware/filial/overview.md — pode conflitar com US-012, US-017, US-018, US-019"
+        },
+        {
+            "id": "US-015",
+            "title": "Remover duplicação — REST API da Matriz (Dup #9)",
+            "description": "Como mantenedor da documentação, quero que a descrição da REST API da Matriz exista em um único lugar. Arquivo canônico: firmware/matriz/rest-api.md.",
+            "acceptanceCriteria": [
+                "'matriz-gui.md' §4 não contém tabela de endpoints REST — em seu lugar há link para 'firmware/matriz/rest-api.md'",
+                "'firmware/matriz/rest-api.md' permanece intacto como fonte canônico",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 15,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca matriz-gui.md — pode conflitar com US-011 e US-022"
+        },
+        {
+            "id": "US-016",
+            "title": "Remover duplicação — Tasks FreeRTOS da Matriz (Dup #10)",
+            "description": "Como mantenedor da documentação, quero que a descrição de tasks FreeRTOS da Matriz exista em um único lugar. Arquivo canônico: firmware/matriz/overview.md.",
+            "acceptanceCriteria": [
+                "'matriz.md' não repete lista de tasks FreeRTOS — em seu lugar há link para 'firmware/matriz/overview.md'",
+                "'architecture/matriz.md' não repete lista de tasks FreeRTOS — em seu lugar há link para 'firmware/matriz/overview.md'",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 16,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca firmware/matriz/overview.md e matriz.md — pode conflitar com US-012, US-013"
+        },
+        {
+            "id": "US-017",
+            "title": "Remover duplicação — Tasks FreeRTOS da Filial (Dup #11)",
+            "description": "Como mantenedor da documentação, quero que a descrição de tasks FreeRTOS da Filial exista em um único lugar. Arquivo canônico: firmware/filial/overview.md.",
+            "acceptanceCriteria": [
+                "'filial.md' não repete lista de tasks FreeRTOS — em seu lugar há link para 'firmware/filial/overview.md'",
+                "'architecture/filial.md' não repete lista de tasks FreeRTOS — em seu lugar há link para 'firmware/filial/overview.md'",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 17,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca firmware/filial/overview.md e filial.md — pode conflitar com US-012, US-014"
+        },
+        {
+            "id": "US-018",
+            "title": "Remover duplicação — Mapeamento GPIO da Filial (Dup #12)",
+            "description": "Como mantenedor da documentação, quero que o mapeamento GPIO da Filial exista em um único lugar. Arquivo canônico: infrastructure/config.md.",
+            "acceptanceCriteria": [
+                "'config-build.md' não repete tabela GPIO — em seu lugar há link para 'infrastructure/config.md'",
+                "'firmware/filial/overview.md' não repete mapeamento GPIO detalhado — em seu lugar há link",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 18,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca config-build.md e firmware/filial/overview.md — pode conflitar com US-012, US-014, US-021, US-023"
+        },
+        {
+            "id": "US-019",
+            "title": "Remover duplicação — Formato de ID de Dispositivo (Dup #3, #13)",
+            "description": "Como mantenedor da documentação, quero que o formato de ID e a definição de sensores vs atuadores existam em um único lugar. Arquivo canônico (ID): requisitos.md §4.1. Arquivo canônico (sensores vs atuadores): definicoes.md.",
+            "acceptanceCriteria": [
+                "'definicoes.md' não repete a definição detalhada do formato de ID — em seu lugar há link para 'requisitos.md' §4.1",
+                "'infrastructure/config.md' não repete formato de ID — em seu lugar há link",
+                "'firmware/filial/overview.md' não repete formato de ID nem definição de sensores/atuadores — em seu lugar há links",
+                "'protocol/udp.md' mantém exemplos mas inclui nota: 'Para o formato completo, veja [Requisitos](../requisitos.md#41-formato-de-id)'",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 19,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca definicoes.md, infrastructure/config.md, firmware/filial/overview.md, protocol/udp.md — pode conflitar com US-009, US-010, US-012, US-014"
+        },
+        {
+            "id": "US-020",
+            "title": "Remover duplicação — Polling e Detecção Offline (Dup #2, #14, #16)",
+            "description": "Como mantenedor da documentação, quero que a descrição de polling e detecção offline da Matriz exista em um único lugar. Arquivo canônico (polling + offline): firmware/matriz/overview.md. Arquivo canônico (timeout): protocol/udp.md.",
+            "acceptanceCriteria": [
+                "'matriz.md' não repete descrição de polling — em seu lugar há link para 'firmware/matriz/overview.md'",
+                "'matriz-gui.md' não repete descrição de robustez/deteção offline — em seu lugar há links",
+                "'architecture/overview.md' não repete polling/offline/timeout — em seu lugar há links",
+                "Timeout de 800ms centralizado em 'protocol/udp.md'",
+                "'protocol/websocket.md' referencia o timeout via link em vez de repetir o valor",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 20,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca 6 arquivos diferentes — alta chance de conflito com outras stories do grupo B. Recomenda-se executar por último no grupo B."
+        },
+        {
+            "id": "US-021",
+            "title": "Remover duplicação — Build & Deploy (Dup #15)",
+            "description": "Como mantenedor da documentação, quero que o processo de build exista em um único lugar. Arquivo canônico: devops/build-deploy.md.",
+            "acceptanceCriteria": [
+                "'config-build.md' não repete comandos/passo-a-passo de build — em seu lugar há link para 'devops/build-deploy.md'",
+                "'devops/build-deploy.md' permanece intacto como fonte canônico",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 21,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca config-build.md — pode conflitar com US-012, US-018, US-023"
+        },
+        {
+            "id": "US-022",
+            "title": "Remover duplicação — mDNS Hostname (Dup #17)",
+            "description": "Como mantenedor da documentação, quero que a descrição do hostname mDNS exista em um único lugar. Arquivo canônico: infrastructure/network.md.",
+            "acceptanceCriteria": [
+                "'infrastructure/wifi.md' não repete configuração mDNS detalhada — em seu lugar há link para 'infrastructure/network.md'",
+                "'matriz-gui.md' mantém descrição de uso do mDNS na GUI mas adiciona link para 'infrastructure/network.md' para detalhes técnicos",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 22,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca matriz-gui.md — pode conflitar com US-011 e US-015"
+        },
+        {
+            "id": "US-023",
+            "title": "Remover duplicação — Endereços IP e Portas (Dup #18)",
+            "description": "Como mantenedor da documentação, quero que a tabela de endereços IP e portas exista em um único lugar. Arquivo canônico: infrastructure/network.md.",
+            "acceptanceCriteria": [
+                "'config-build.md' não repete tabela de IPs/portas — em seu lugar há link para 'infrastructure/network.md'",
+                "'matriz.md' não repete endereços/portas — em seu lugar há link",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 23,
+            "group": "B",
+            "passes": false,
+            "notes": "Toca config-build.md e matriz.md — pode conflitar com US-012, US-013, US-016, US-018, US-021"
+        },
+        {
+            "id": "US-024",
+            "title": "Adicionar seção 'Veja Também' nos arquivos canônicos",
+            "description": "Como leitor da documentação, quero encontrar links para páginas relacionadas no final de cada arquivo canônico, para navegar facilmente entre tópicos conexos.",
+            "acceptanceCriteria": [
+                "Cada arquivo canônico (16 arquivos listados no PRD) tem seção '## Veja Também' no final",
+                "Os links usam caminhos relativos com extensão .md",
+                "Cada link tem uma breve descrição do que o leitor encontrará na página destino",
+                "Não há links quebrados (todos os destinos existem)",
+                "Build Docusaurus passa sem erros"
+            ],
+            "priority": 24,
+            "group": "C",
+            "passes": false,
+            "notes": "Lista de arquivos: architecture/overview.md, protocol/udp.md, protocol/websocket.md, infrastructure/config.md, infrastructure/network.md, infrastructure/wifi.md, firmware/matriz/overview.md, firmware/matriz/rest-api.md, firmware/filial/overview.md, firmware/filial/rest-api.md, gui/matriz-gui.md, gui/components.md, architecture/matriz.md, architecture/filial.md, devops/build-deploy.md, devops/debug-testing.md"
+        },
+        {
+            "id": "US-025",
+            "title": "Verificar build Docusaurus",
+            "description": "Como mantenedor da documentação, quero garantir que o build Docusaurus passe sem erros após todas as refatorações.",
+            "acceptanceCriteria": [
+                "'pnpm --filter docusaurus build' executa sem erros",
+                "Não há warnings de links quebrados no output do build",
+                "Todos os arquivos .md são encontrados pelo Docusaurus (não há 404s)"
+            ],
+            "priority": 25,
+            "group": "D",
+            "passes": false,
+            "notes": "Story de verificação final — depende de todos os grupos anteriores"
+        }
+    ]
+}

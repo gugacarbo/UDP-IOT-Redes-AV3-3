@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "docs/**"
+      - "docusaurus/**"
       - ".github/workflows/deploy-docs.yml"
   workflow_dispatch:
 
@@ -40,12 +40,12 @@ jobs:
 
       - name: Build website
         run: pnpm run build
-        working-directory: docs
+        working-directory: docusaurus
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./docs/build
+          path: ./docusaurus/build
 
   deploy:
     environment:
