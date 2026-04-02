@@ -37,6 +37,7 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        working-directory: docusaurus
 
       - name: Build website
         run: pnpm run build
