@@ -1,0 +1,8 @@
+{
+  "label": "Arquitetura",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Diagramas e visão geral da arquitetura do sistema."
+  }
+}

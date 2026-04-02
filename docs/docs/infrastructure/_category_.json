@@ -1,0 +1,8 @@
+{
+  "label": "Infraestrutura",
+  "position": 9,
+  "link": {
+    "type": "generated-index",
+    "description": "Configuração, rede, Wi-Fi e provisionamento."
+  }
+}

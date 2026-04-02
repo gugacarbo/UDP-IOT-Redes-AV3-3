@@ -1,0 +1,8 @@
+{
+  "label": "Filial",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Firmware da Filial ESP32 — servidor UDP local."
+  }
+}

@@ -58,54 +58,54 @@ flowchart LR
 
 ### 🏗️ Arquitetura
 
-| Documento                                               | Descrição                                                                    |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [Visão Geral do Sistema](docs/architecture/overview.md) | Diagrama geral GUI ↔ Matriz ↔ Filial, fluxo de dados e resumo dos protocolos |
-| [Arquitetura da Matriz](docs/architecture/matriz.md)    | Componentes internos: polling, bridge WebSocket, persistência e API REST     |
-| [Arquitetura da Filial](docs/architecture/filial.md)    | Componentes internos: servidor UDP, processamento de comandos e GPIO         |
+| Documento                                                            | Descrição                                                                    |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [Visão Geral do Sistema](website/docs/architecture/overview.md)      | Diagrama geral GUI ↔ Matriz ↔ Filial, fluxo de dados e resumo dos protocolos |
+| [Arquitetura da Matriz](website/website/docs/architecture/matriz.md) | Componentes internos: polling, bridge WebSocket, persistência e API REST     |
+| [Arquitetura da Filial](website/website/docs/architecture/filial.md) | Componentes internos: servidor UDP, processamento de comandos e GPIO         |
 
 ### 📡 Protocolos
 
-| Documento                                         | Descrição                                                                          |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [Protocolo UDP](docs/protocol/udp.md)             | Especificação completa da comunicação Matriz ↔ Filial (JSON sobre UDP porta 51000) |
-| [Protocolo WebSocket](docs/protocol/websocket.md) | Especificação da comunicação Matriz ↔ GUI (WebSocket porta 80)                     |
+| Documento                                                 | Descrição                                                                          |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [Protocolo UDP](website/docs/protocol/udp.md)             | Especificação completa da comunicação Matriz ↔ Filial (JSON sobre UDP porta 51000) |
+| [Protocolo WebSocket](website/docs/protocol/websocket.md) | Especificação da comunicação Matriz ↔ GUI (WebSocket porta 80)                     |
 
 ### 🔧 Firmware — Matriz
 
-| Documento                                                      | Descrição                                                                |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| [Firmware Matriz — Overview](docs/firmware/matriz/overview.md) | Modelo de dados, polling, descoberta automática e detecção offline       |
-| [Firmware Matriz — REST API](docs/firmware/matriz/rest-api.md) | Endpoints REST: Wi-Fi, filiais (CRUD), status, descoberta e GUI estática |
+| Documento                                                                      | Descrição                                                                |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| [Firmware Matriz — Overview](website/docs/firmware/matriz/overview.md)         | Modelo de dados, polling, descoberta automática e detecção offline       |
+| [Firmware Matriz — REST API](website/website/docs/firmware/matriz/rest-api.md) | Endpoints REST: Wi-Fi, filiais (CRUD), status, descoberta e GUI estática |
 
 ### 🔧 Firmware — Filial
 
-| Documento                                                      | Descrição                                                                  |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [Firmware Filial — Overview](docs/firmware/filial/overview.md) | Hierarquia de dispositivos, GPIO, processamento de comandos e autenticação |
-| [Firmware Filial — REST API](docs/firmware/filial/rest-api.md) | Endpoints REST locais: Wi-Fi, configuração, dispositivos e captive portal  |
+| Documento                                                                      | Descrição                                                                  |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| [Firmware Filial — Overview](website/docs/firmware/filial/overview.md)         | Hierarquia de dispositivos, GPIO, processamento de comandos e autenticação |
+| [Firmware Filial — REST API](website/website/docs/firmware/filial/rest-api.md) | Endpoints REST locais: Wi-Fi, configuração, dispositivos e captive portal  |
 
 ### 🖥️ GUI
 
-| Documento                                                  | Descrição                                                              |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------- |
-| [GUI — Matriz Dashboard](docs/gui/matriz-gui.md)           | Arquitetura React, WebSocket, visualização de dispositivos e histórico |
-| [GUI — Componentes e Dependências](docs/gui/components.md) | shadcn/ui, Tailwind, ícones e estrutura visual da interface            |
+| Documento                                                                  | Descrição                                                              |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [GUI — Matriz Dashboard](website/website/docs/gui/matriz-gui.md)           | Arquitetura React, WebSocket, visualização de dispositivos e histórico |
+| [GUI — Componentes e Dependências](website/website/docs/gui/components.md) | shadcn/ui, Tailwind, ícones e estrutura visual da interface            |
 
 ### 🌐 Infraestrutura
 
-| Documento                                              | Descrição                                                                  |
-| ------------------------------------------------------ | -------------------------------------------------------------------------- |
-| [Wi-Fi e Provisionamento](docs/infrastructure/wifi.md) | Modos STA/AP, captive portal, mDNS e fluxo de provisionamento              |
-| [Configuração](docs/infrastructure/config.md)          | Arquivos JSON em LittleFS: `config_wifi`, `config_matriz`, `config_filial` |
-| [Rede](docs/infrastructure/network.md)                 | Topologia, portas, mDNS e endereçamento IP                                 |
+| Documento                                                              | Descrição                                                                  |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [Wi-Fi e Provisionamento](website/website/docs/infrastructure/wifi.md) | Modos STA/AP, captive portal, mDNS e fluxo de provisionamento              |
+| [Configuração](website/website/docs/infrastructure/config.md)          | Arquivos JSON em LittleFS: `config_wifi`, `config_matriz`, `config_filial` |
+| [Rede](website/website/docs/infrastructure/network.md)                 | Topologia, portas, mDNS e endereçamento IP                                 |
 
 ### ⚙️ DevOps
 
-| Documento                                      | Descrição                                                                  |
-| ---------------------------------------------- | -------------------------------------------------------------------------- |
-| [Build e Deploy](docs/devops/build-deploy.md)  | Makefile, PlatformIO, pnpm/Vite, upload LittleFS e procedimentos de deploy |
-| [Debug e Testes](docs/devops/debug-testing.md) | Serial monitor, logging, testes e ferramentas de troubleshooting           |
+| Documento                                                      | Descrição                                                                  |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [Build e Deploy](website/docs/devops/build-deploy.md)          | Makefile, PlatformIO, pnpm/Vite, upload LittleFS e procedimentos de deploy |
+| [Debug e Testes](website/website/docs/devops/debug-testing.md) | Serial monitor, logging, testes e ferramentas de troubleshooting           |
 
 ---
 
@@ -113,12 +113,12 @@ flowchart LR
 
 Estes documentos contêm especificações executáveis com maior profundidade técnica.
 
-| Documento                                             | Descrição                                      |
-| ----------------------------------------------------- | ---------------------------------------------- |
-| [Matriz ESP32](docs/04-matriz.md)                     | Especificação completa do firmware da Matriz   |
-| [GUI da Matriz](docs/05-matriz-gui.md)                | Especificação completa da interface web        |
-| [Filial ESP32](docs/06-filial.md)                     | Especificação completa do firmware da Filial   |
-| [Configuração, Rede e Build](docs/07-config-build.md) | Configuração de ambiente, rede, build e deploy |
+| Documento                                                  | Descrição                                      |
+| ---------------------------------------------------------- | ---------------------------------------------- |
+| [Matriz ESP32](website/docs/matriz.md)                     | Especificação completa do firmware da Matriz   |
+| [GUI da Matriz](website/docs/matriz-gui.md)                | Especificação completa da interface web        |
+| [Filial ESP32](website/docs/filial.md)                     | Especificação completa do firmware da Filial   |
+| [Configuração, Rede e Build](website/docs/config-build.md) | Configuração de ambiente, rede, build e deploy |
 
 ---
 
@@ -160,12 +160,12 @@ flowchart TD
 ---
 
 
-| Documento                                        | Descrição                                         |
-| ------------------------------------------------ | ------------------------------------------------- |
-| [Solicitação do Cliente](docs/00-solicitação.md) | Problema relatado e escopo original do projeto    |
-| [Especificação Técnica](docs/01-requisitos.md)   | Requisitos funcionais e não-funcionais detalhados |
-| [Definições Técnicas](docs/02-definições.md)     | Glossário, acrônimos e definições de domínio      |
-| [Fluxos](docs/03-fluxos.md)                      | Fluxos de dados e comunicação do sistema          |
+| Documento                                             | Descrição                                         |
+| ----------------------------------------------------- | ------------------------------------------------- |
+| [Solicitação do Cliente](website/docs/solicitacao.md) | Problema relatado e escopo original do projeto    |
+| [Especificação Técnica](website/docs/requisitos.md)   | Requisitos funcionais e não-funcionais detalhados |
+| [Definições Técnicas](website/docs/definicoes.md)     | Glossário, acrônimos e definições de domínio      |
+| [Fluxos](website/docs/fluxos.md)                      | Fluxos de dados e comunicação do sistema          |
 
 ---
 
@@ -173,17 +173,17 @@ flowchart TD
 ## 🚀 Como Começar
 
 1. **Entenda o problema** —
-   [Solicitação do Cliente](docs/00-solicitação.md) ·
-   [Especificação Técnica](docs/01-requisitos.md)
+   [Solicitação do Cliente](website/docs/solicitacao.md) ·
+   [Especificação Técnica](website/docs/requisitos.md)
 2. **Visão geral** —
-   [Arquitetura — Visão Geral](docs/architecture/overview.md)
+   [Arquitetura — Visão Geral](website/docs/architecture/overview.md)
 3. **Protocolos** —
-   [UDP](docs/protocol/udp.md) ·
-   [WebSocket](docs/protocol/websocket.md)
+   [UDP](website/docs/protocol/udp.md) ·
+   [WebSocket](website/docs/protocol/websocket.md)
 4. **Firmware** —
-   [Matriz](docs/firmware/matriz/overview.md) ·
-   [Filial](docs/firmware/filial/overview.md)
+   [Matriz](website/docs/firmware/matriz/overview.md) ·
+   [Filial](website/docs/firmware/filial/overview.md)
 5. **Deploy** —
-   [Build e Deploy](docs/devops/build-deploy.md)
+   [Build e Deploy](website/docs/devops/build-deploy.md)
 
 

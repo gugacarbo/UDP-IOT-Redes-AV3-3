@@ -1,0 +1,8 @@
+{
+  "label": "Firmware",
+  "position": 7,
+  "link": {
+    "type": "generated-index",
+    "description": "Documentação do firmware ESP32 — Matriz e Filial."
+  }
+}

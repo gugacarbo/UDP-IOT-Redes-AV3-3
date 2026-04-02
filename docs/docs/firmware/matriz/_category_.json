@@ -1,0 +1,8 @@
+{
+  "label": "Matriz",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "Firmware da Matriz ESP32 — hub centralizador."
+  }
+}
