@@ -6,14 +6,12 @@
 		"matriz-gui"
 	],
 	"scripts": {
-		"dev": "pnpm -C matriz-gui dev",
-		"build": "pnpm -C matriz-gui build",
-		"clean": "pnpm -C matriz-gui clean",
 		"biome:fix": "biome check --write",
+		"build:docs": "pnpm run --filter website build",
 		"build:gui": "pnpm run --filter @udp-iot/matriz-gui build",
 		"build:matriz": "cd matriz-esp32 && pio run",
 		"build:filial": "cd filial-esp32 && pio run",
-		"build:all": "pnpm run build:gui & pnpm run build:matriz & pnpm run build:filial &",
+		"build:all": "pnpm run build:docs & pnpm run build:gui & pnpm run build:matriz & pnpm run build:filial &",
 		"upload:matriz": "cd matriz-esp32 && pio run --target upload",
 		"upload:filial": "cd filial-esp32 && pio run --target upload",
 		"uploadfs:matriz": "cd matriz-esp32 && pio run --target buildfs && pio run --target uploadfs",
