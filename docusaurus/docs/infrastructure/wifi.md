@@ -77,6 +77,11 @@ Armazenado no LittleFS de cada ESP32.
 | IP        | `192.168.4.1`  | `192.168.4.1`             |
 | Porta     | `80`           | `80`                      |
 
+#### Por que os SSIDs são diferentes?
+
+- **Matriz**: Usa `Matriz-Setup` porque é um dispositivo único e identificado pelo nome "Matriz" — não há necessidade de desambiguação.
+- **Filial**: Usa `ESP32-<device_ip>-Setup` porque há múltiplas Filiais na rede. O endereço IP no SSID permite identificar exatamente qual ESP32 está sendo configurado, evitandoconfusão em ambientes com várias Controladoras Filial.
+
 ### Endpoints do Portal
 
 | Rota      | Método | Descrição                    |

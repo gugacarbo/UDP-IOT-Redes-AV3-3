@@ -82,14 +82,18 @@ Todos os dispositivos operam na **mesma rede Wi-Fi local** (LAN).
 
 ### UDP (Matriz ↔ Filial)
 
-| Aspecto        | Valor                 |
-| -------------- | --------------------- |
-| Tipo           | Unicast               |
-| Porta origem   | Aleatória             |
-| Porta destino  | 51000 (configurável)  |
-| Protocolo      | UDP sobre IP          |
-| Tamanho máximo | 1472 bytes (MTU safe) |
-| Timeout        | 800ms (configurável)  |
+:::important[Mesma porta em ambos os lados]
+**Ambas devem usar a mesma porta UDP (padrão 51000).** A porta configurada na Matriz deve ser idêntica à porta configurada na Filial para que a comunicação funcione.
+:::
+
+| Aspecto        | Valor                                              |
+| -------------- | -------------------------------------------------- |
+| Tipo           | Unicast                                            |
+| Porta origem   | Aleatória                                          |
+| Porta destino  | 51000 (configurável) — **mesma em Matriz e Filial** |
+| Protocolo      | UDP sobre IP                                       |
+| Tamanho máximo | 1472 bytes (MTU safe)                              |
+| Timeout        | 800ms (configurável)                               |
 
 ### WebSocket (Matriz ↔ GUI)
 

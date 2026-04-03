@@ -92,9 +92,11 @@ struct DeviceState {
 
 ---
 
-## Polling (Ciclo Automático)
+## Polling (Ciclo Automático) {#polling-ciclo-automático}
 
-O polling executa em loop infinito com intervalo configurável (`polling_interval`, padrão 30s).
+O firmware executa **polling sequencial por filial, executado via task dedicada**. O loop infinito itera sobre cada filial em sequência, aguardando timeout antes de prosseguir para a próxima — não há envio paralelo.
+
+Intervalo configurável (`polling_interval`, padrão 30s).
 
 ### Fluxo do Polling
 

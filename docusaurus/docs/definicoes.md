@@ -39,7 +39,7 @@ Ema empresa com várias filiais espalhadas pela cidade está gastando muito dinh
 - Esse portal é acessado apenas na rede da própria filial e não substitui o dashboard central
 
 **1.2.3 GUI da Filial**
-- Interface local simples, servida pelo ESP32 da filial
+- Portal Local da Filial simples, servida pelo ESP32 da filial
 - Usada para configurar Wi-Fi, credenciais, IP e parâmetros básicos de operação
 - Exibe o status dos sensores e atuadores daquela filial
 - Serve para manutenção e testes locais, não para operação centralizada
@@ -180,7 +180,7 @@ flowchart LR
 - **Porta:** 80
 - **Formato:** JSON
 - **Sem autenticação** rede local confiável
-- **Uso principal:** interface local de configuração e diagnóstico da filial
+- **Uso principal:** Portal Local da Filial para configuração e diagnóstico
 
 **Quando usar cada um:**
 - GET = Ler configuração

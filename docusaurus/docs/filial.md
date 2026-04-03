@@ -216,7 +216,7 @@ Todos os comandos recebidos pela Filial devem conter:
 
 - Todas as respostas UDP são enviadas de volta para o **IP e porta de origem** do comando recebido
 - A Matriz escuta respostas na porta **51000** (fixa)
-- UDP malformado (JSON inválido) é **ignorado silenciosamente**
+- UDP malformado (JSON inválido) é **ignorado silenciosamente (por segurança)**
 - A Filial deve estar preparada para receber múltiplos comandos em sequência rápida (polling paralelo da Matriz)
 - **Múltiplos `set_req` simultâneos** para o mesmo dispositivo: último comando recebido prevalece (processamento FIFO síncrono no loop UDP)
 
@@ -335,10 +335,10 @@ public:
 - `listDevices` — preenche JSON array com os `id` de todos dispositivos registrados
 - `getStatus` — preenche JSON object com `id → valor` lido de cada dispositivo
 - `setValue` — localiza atuador por `id` e chama `write()`
-- Dispositivos não encontrados em `setValue` → comando ignorado silenciosamente
+- Dispositivos não encontrados em `setValue` → comando ignorado
 - `actuator_ac_*` com `value` fora de `0–1023` → aplicar clamp automático antes do `write()`
 - `actuator_light_*` aceita `value` booleano e também `0/1` numérico
-- Valor inválido em `set_req` → comando ignorado silenciosamente
+- Valor inválido em `set_req` → comando ignorado
 
 ### 6.2 CommandHandler
 

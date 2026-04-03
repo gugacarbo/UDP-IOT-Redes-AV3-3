@@ -234,8 +234,10 @@ Todos os comandos enviados pela Matriz para a Filial devem conter:
 
 ### 5.1 Polling (`get_status`)
 
+> ⚠️ Esta seção descreve o comportamento de polling. Para detalhes completos, consulte [Firmware Matriz → Polling](../firmware/matriz/overview.md#polling-ciclo-automático).
+
 - **Intervalo:** `polling_interval` (padrão 30000ms, mín 5000ms)
-- **Estratégia:** paralelo — todas filiais simultaneamente
+- **Estratégia:** sequencial — uma filial por ciclo (não paralelo)
 - **Timeout individual:** 800ms por filial
 - **Runtime:** `PUT /api/config` aplica novo intervalo no próximo ciclo (timer reiniciado)
 

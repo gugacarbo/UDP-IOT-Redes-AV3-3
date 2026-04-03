@@ -194,7 +194,7 @@ sequenceDiagram
 
 ### 7.2 Controle
 - Ligar/desligar luzes
-- Ajustar intensidade do ar-condicionado (0–1023)
+- Ajustar duty cycle PWM (0-1023) do ar-condicionado
 - Feedback visual após alteração
 
 ### 7.3 Gerenciamento
