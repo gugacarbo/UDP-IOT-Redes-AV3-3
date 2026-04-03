@@ -13,13 +13,13 @@ A comunicação entre Matriz e Filial usa **UDP unicast** na porta **51000** (pa
 **Ambas devem usar a mesma porta (padrão 51000).** A Matriz e a Filial devem estar configuradas com o mesmo valor de porta para que a comunicação UDP funcione. Caso uma das partes use uma porta diferente, os datagramas não serão recebidos.
 :::
 
-| Aspecto   | Valor                   |
-| --------- | ----------------------- |
-| Protocolo | UDP unicast             |
+| Aspecto   | Valor                                               |
+| --------- | --------------------------------------------------- |
+| Protocolo | UDP unicast                                         |
 | Porta     | 51000 (configurável) — **mesma em Matriz e Filial** |
-| Encoding  | JSON UTF-8              |
-| Timeout   | 800ms (configurável)    |
-| Auth      | `user` + `pass` por cmd |
+| Encoding  | JSON UTF-8                                          |
+| Timeout   | 800ms (configurável)                                |
+| Auth      | `user` + `pass` por cmd                             |
 
 > **Regra**: A resposta é sempre enviada para o **IP:porta de origem** do datagrama recebido.
 
@@ -131,9 +131,9 @@ Define o valor de um atuador na filial.
 
 ## Formato dos Valores
 
-| Tipo     | `type`  | Range          | Unidade         |
-| -------- | ------- | -------------- | --------------- |
-| Luz      | `light` | `true`/`false` | ON/OFF          |
+| Tipo     | `type`  | Range          | Unidade                 |
+| -------- | ------- | -------------- | ----------------------- |
+| Luz      | `light` | `true`/`false` | ON/OFF                  |
 | Ar-cond. | `ac`    | `0–1023`       | duty cycle PWM (0-1023) |
 
 ---
@@ -142,8 +142,8 @@ Define o valor de um atuador na filial.
 
 | Condição                | Comportamento                          |
 | ----------------------- | -------------------------------------- |
-| JSON malformado         | Ignorado silenciosamente (por segurança) |
-| `user`/`pass` inválidos | Ignorado silenciosamente (por segurança) |
-| `cmd` desconhecido      | Ignorado silenciosamente (por segurança) |
+| JSON malformado         | Ignorado (por segurança)               |
+| `user`/`pass` inválidos | Ignorado (por segurança)               |
+| `cmd` desconhecido      | Ignorado (por segurança)               |
 | Filial sem resposta     | Matriz gera `code: TIMEOUT` após 800ms |
 | 3 ciclos sem resposta   | Filial marcada como `online: false`    |

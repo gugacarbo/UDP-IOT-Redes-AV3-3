@@ -8,7 +8,7 @@ importers:
 
   .: {}
 
-  docs:
+  docusaurus:
     dependencies:
       '@docusaurus/core':
         specifier: 3.9.2

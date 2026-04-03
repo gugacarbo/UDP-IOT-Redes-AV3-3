@@ -4,3 +4,6 @@ packages:
   - "docusaurus"
   - "matriz-esp32"
   - "filial-esp32"
+allowBuilds:
+  core-js: true
+  core-js-pure: true

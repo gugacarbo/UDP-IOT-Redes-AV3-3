@@ -128,7 +128,7 @@ Todos os comandos recebidos pela Filial devem conter:
 
 - Todo comando UDP deve incluir `user` e `pass`
 - Credenciais são validadas contra `admin_user` e `admin_pass` em `config_filial.json`
-- Falha de autenticação → resposta ignorada silenciosamente (por segurança, não revela que o servidor existe)
+- Falha de autenticação → resposta ignorada (por segurança)
 - Timeout de autenticação: nenhum (validação síncrona no parse)
 
 ### 4.3 Tabela de comandos

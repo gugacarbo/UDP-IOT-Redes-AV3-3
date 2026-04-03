@@ -38,8 +38,8 @@ Ema empresa com várias filiais espalhadas pela cidade está gastando muito dinh
 - Também expõe um portal local de configuração e diagnóstico
 - Esse portal é acessado apenas na rede da própria filial e não substitui o dashboard central
 
-**1.2.3 GUI da Filial**
-- Portal Local da Filial simples, servida pelo ESP32 da filial
+**1.2.3 Portal Local da Filial**
+- Interface local simples, servida pelo ESP32 da filial
 - Usada para configurar Wi-Fi, credenciais, IP e parâmetros básicos de operação
 - Exibe o status dos sensores e atuadores daquela filial
 - Serve para manutenção e testes locais, não para operação centralizada

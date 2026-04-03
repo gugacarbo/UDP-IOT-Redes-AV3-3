@@ -40,7 +40,7 @@ Todos os dispositivos operam na **mesma rede Wi-Fi local** (LAN).
 | 51000 | UDP       | Matriz    | Filial  | Comandos IoT            |
 | 51000 | UDP       | Filial    | Matriz  | Respostas IoT           |
 
-> **Nota**: A porta UDP (51000) é configurável em `config_matriz.json` e `config_filial.json`.
+> **Nota**: A porta UDP (51000) deve ser a **mesma** em ambos os dispositivos, configurável em `config_matriz.json` e `config_filial.json`.
 
 ---
 
@@ -86,14 +86,14 @@ Todos os dispositivos operam na **mesma rede Wi-Fi local** (LAN).
 **Ambas devem usar a mesma porta UDP (padrão 51000).** A porta configurada na Matriz deve ser idêntica à porta configurada na Filial para que a comunicação funcione.
 :::
 
-| Aspecto        | Valor                                              |
-| -------------- | -------------------------------------------------- |
-| Tipo           | Unicast                                            |
-| Porta origem   | Aleatória                                          |
+| Aspecto        | Valor                                               |
+| -------------- | --------------------------------------------------- |
+| Tipo           | Unicast                                             |
+| Porta origem   | Aleatória                                           |
 | Porta destino  | 51000 (configurável) — **mesma em Matriz e Filial** |
-| Protocolo      | UDP sobre IP                                       |
-| Tamanho máximo | 1472 bytes (MTU safe)                              |
-| Timeout        | 800ms (configurável)                               |
+| Protocolo      | UDP sobre IP                                        |
+| Tamanho máximo | 1472 bytes (MTU safe)                               |
+| Timeout        | 800ms (configurável)                                |
 
 ### WebSocket (Matriz ↔ GUI)
 

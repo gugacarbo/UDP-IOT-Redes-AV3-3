@@ -18,11 +18,11 @@ flowchart LR
 
 ## Componentes
 
-| Componente | Função                                          |
-| ---------- | ----------------------------------------------- |
-| **Matriz** | Hub centralizador — gerencia filiais, serve GUI |
-| **Filial** | Servidor UDP — controla dispositivos locais     |
-| **GUI**    | Dashboard React — monitoramento em tempo real   |
+| Componente | Função                                                           |
+| ---------- | ---------------------------------------------------------------- |
+| **Matriz** | Hub centralizador — gerencia filiais, serve GUI da Matriz        |
+| **Filial** | Servidor UDP — controla dispositivos locais e serve Portal Local |
+| **GUI**    | Dashboard React — monitoramento em tempo real (GUI da Matriz)    |
 
 ## Navegação
 

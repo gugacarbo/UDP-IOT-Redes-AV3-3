@@ -94,9 +94,9 @@ UDPServer
 
 ### Atuadores
 
-| Dispositivo        | ID                    | GPIO | Função              | Valores    |
-| ------------------ | --------------------- | ---- | ------------------- | ---------- |
-| Atuador Luz (Sala) | `actuator_light_sala` | 22   | `digitalWrite()`    | `0` ou `1` |
+| Dispositivo        | ID                    | GPIO | Função                                | Valores    |
+| ------------------ | --------------------- | ---- | ------------------------------------- | ---------- |
+| Atuador Luz (Sala) | `actuator_light_sala` | 22   | `digitalWrite()`                      | `0` ou `1` |
 | Atuador AC (Sala)  | `actuator_ac_sala`    | 25   | `ledcWrite()` duty cycle PWM (0-1023) | `0–1023`   |
 
 ---
@@ -109,9 +109,9 @@ UDPServer
 flowchart TD
     RECV[Recebe datagrama UDP] --> PARSE[Parse JSON]
     PARSE --> VALID{JSON válido?}
-    VALID -->|Não| IGNORE[Ignora silenciosamente (por segurança)]
+    VALID -->|Não| IGNORE[Ignora (por segurança)]
     VALID -->|Sim| AUTH{user/pass válido?}
-    AUTH -->|Não| IGNORE2[Ignora silenciosamente (por segurança)]
+    AUTH -->|Não| IGNORE2[Ignora (por segurança)]
     AUTH -->|Sim| CMD{Tipo de cmd?}
     CMD -->|list_req| LIST[handleList]
     CMD -->|get_status| STATUS[handleGetStatus]
