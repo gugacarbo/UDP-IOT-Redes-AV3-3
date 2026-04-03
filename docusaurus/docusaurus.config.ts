@@ -19,10 +19,10 @@ const config: Config = {
 
 	onBrokenLinks: "throw",
 
-	i18n: {
-		defaultLocale: "pt-BR",
-		locales: ["pt-BR"],
-	},
+	// i18n: {
+	// 	defaultLocale: "pt-BR",
+	// 	locales: ["pt-BR"],
+	// },
 
 	presets: [
 		[
