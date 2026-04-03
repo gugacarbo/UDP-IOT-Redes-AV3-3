@@ -1,6 +1,6 @@
 packages:
   - "matriz-gui"
   - "filial-gui"
-  - "docs"
+  - "docusaurus"
   - "matriz-esp32"
   - "filial-esp32"
